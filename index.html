@@ -46,7 +46,8 @@
             <div id="userProfile" class="opacity-40 transition-opacity duration-300 flex items-center gap-2">
                 <a href="#" target="_blank" id="userDisplayName" title="Dats me!"
                     class="hover:underline font-bold text-sm"></a>
-                <div class="flex items-center text-orange-500 font-bold text-sm bg-orange-500/10 px-2 py-1 h-7 rounded gap-2"
+                <div data-refresh="streak"
+                    class="flex items-center text-orange-500 cursor-pointer font-bold text-sm bg-orange-500/10 px-2 py-1 h-7 rounded gap-2"
                     title="Your current coding streak!">
                     <i data-lucide="flame" class="w-4 h-4 fill-orange-500"></i>
                     <span><span id="streakDisplay">0</span><span class="hidden lg:inline"> day<span
@@ -119,8 +120,7 @@
     <main class="w-full flex-grow flex flex-col justify-center max-w-5xl mx-auto h-full px-4 py-2">
 
         <div class="grid grid-cols-2 gap-8 items-end w-full mb-6">
-            <div data-refresh="streak" title="Current position in global leaderboard"
-                class="p-1 cursor-pointer transition-all">
+            <div title="Current position in global leaderboard" class="p-1 transition-all">
                 <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium flex items-center gap-1">
                     Global Rank
                 </div>
