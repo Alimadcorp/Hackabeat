@@ -46,14 +46,14 @@ async function handleOauth() {
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
     let key = "";
-    if (!accessToken) {
+    if (accessToken) {
         const apiKeyRes = await fetch('https://hackatime.hackclub.com/api/v1/authenticated/api_keys', {
             headers: { 'Authorization': `Bearer ${accessToken}` }
         });
 
         if (!apiKeyRes.ok) throw new Error('Failed to retrieve operational api key');
         key = (await apiKeyRes.json()).token;
-    }
+    } else { return }
     const usnm = params.get('username');
     const uid = params.get('uid');
 
