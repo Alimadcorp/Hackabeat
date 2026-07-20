@@ -35,37 +35,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function handleOauth() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    if (!code) return;
+    const hash = window.location.hash.substring(1);
+    if (!hash) return;
+
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get('access_token');
+    const resolvedUsername = params.get('username');
+
+    if (!accessToken || !resolvedUsername) return;
 
     try {
-        const CLIENT_ID = 'XeZSxRcmM3D5SR_437caoQUvmPFc2xkg18ce6Wk9Y7E';
-        const REDIRECT_URI = 'https://api.alimad.co/auth/hackatime/callback';
-
-        const bodyParams = new URLSearchParams();
-        bodyParams.append('grant_type', 'authorization_code');
-        bodyParams.append('code', code);
-        bodyParams.append('redirect_uri', REDIRECT_URI);
-        bodyParams.append('client_id', CLIENT_ID);
-
-        const tokenRes = await fetch('https://hackatime.hackclub.com/oauth/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: bodyParams.toString()
-        });
-
-        if (!tokenRes.ok) throw new Error('Token verification failed.');
-        const tokenData = await tokenRes.json();
-        const accessToken = tokenData.access_token;
-
-        const profileRes = await fetch('https://hackatime.hackclub.com/api/v1/authenticated/me', {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-        });
-        if (!profileRes.ok) throw new Error('Profile resolution failed.');
-        const profileData = await profileRes.json();
-        const resolvedUsername = profileData.github_username || profileData.id.toString();
-
         cfg = {
             username: resolvedUsername,
             apiKey: accessToken,
@@ -74,6 +53,7 @@ async function handleOauth() {
 
         localStorage.setItem('h_cfg', JSON.stringify(cfg));
         d.setupModal.classList.add('hidden');
+
         history.replaceState(null, document.title, window.location.pathname);
         loadCfg();
     } catch (err) {
@@ -191,10 +171,13 @@ async function sync(types) {
             el: d.actualTimeDisplay,
             fn: (json) => {
                 actualTotalSeconds = json?.data?.grand_total?.total_seconds || 0;
-
-                const gol = (json?.data?.goal?.target_seconds || 7200) / 3600;
+                const textStr = json?.data?.grand_total?.text || "";
+                const match = textStr.match(/(\d+(?:\.\d+)?)\s*h\s+goal/i);
                 if (match && match[1]) {
-                    cfg.targetHours = match[1];
+                    cfg.targetHours = parseFloat(match[1]);
+                    localStorage.setItem('h_cfg', JSON.stringify(cfg));
+                } else if (json?.data?.goal?.target_seconds) {
+                    cfg.targetHours = json.data.goal.target_seconds / 3600;
                     localStorage.setItem('h_cfg', JSON.stringify(cfg));
                 }
             }
