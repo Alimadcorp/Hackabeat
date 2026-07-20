@@ -12,6 +12,18 @@ Hackatime tracks time using heartbeats. Whenever you write some code, it uploads
 
 ## Deployment
 
+### Backend:
+
+Refer to [server](./server)
+
+Note down the production url of the deployed server, your_server.com
+
+### Frontend:
+
+Replace all occurrences of api.alimad.co with your_server.com in script.js
+
+Search for CLIENT_ID in `script.js` and replace it with your hackatime oauth app's client id
+
 Deploy over any static hosting like Github pages, or spin up a local server using:
 
 `python -m http.server`

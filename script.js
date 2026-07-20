@@ -1,4 +1,4 @@
-let cfg = { username: '', apiKey: '', targetHours: 2.0 };
+let cfg = { username: '', authToken: '', targetHours: 2.0 };
 let startTimestamp = null, actualTotalSeconds = 0, lastHeartbeatTime = null;
 
 const locks = { actual: false, streak: false, heartbeat: false, potential: false };
@@ -9,7 +9,7 @@ let audio = new Audio();
 
 let alarming_situation = false;
 
-const getCoding = ["Get coding vro -_-", "BROOOO GET CODING", "Stop procrastinating", "Are you a Sabio Tang?", "Nah bro dont give up already :<"];
+const getCoding = ["Get coding vro -_-", "BROOOO GET CODING", "Stop procrastinating", "Be like Sabio Tang, your code shall exist more than you do", "Nah bro dont give up already :<", "That's what she said", "RRRRRRRAAAAAAHHHHHHHH GET U SELF CODING OR ELSE :rick-astley-gun:", "Uhhhh get coding :P", "If u code for 30 more minutes I'll ask you to code for another 30"];
 
 const el = (id) => document.getElementById(id);
 const selectors = [
@@ -45,18 +45,26 @@ async function handleOauth() {
 
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
-    const key = params.get('key');
+    let key = params.get('key');
+    if (!key) {
+        const apiKeyRes = await fetch('https://hackatime.hackclub.com/api/v1/authenticated/api_keys', {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+
+        if (!apiKeyRes.ok) throw new Error('Failed to retrieve operational api key');
+        key = (await apiKeyRes.json()).token;
+    }
     const usnm = params.get('username');
     const uid = params.get('uid');
 
-    if (!accessToken || !usnm) return;
+    if (!accessToken || !usnm || !key) { cfg = { username: '', authToken: '', targetHours: 2.0 }; localStorage.setItem("h_cfg", JSON.stringify(cfg)); return; }
 
     try {
         cfg = {
             username: usnm,
-            apiKey: accessToken,
+            authToken: accessToken,
             uid,
-            apiOpKey: key,
+            oauthToken: key,
             targetHours: 2.0,
             meta: null
         };
@@ -215,13 +223,13 @@ function loadCfg() {
 }
 
 d.saveconfigBtn.addEventListener('click', () => {
-    if (cfg.apiKey && cfg.username) {
+    if (cfg.authToken && cfg.username) {
         d.setupModal.classList.add('hidden');
         return;
     }
     const CLIENT_ID = 'XeZSxRcmM3D5SR_437caoQUvmPFc2xkg18ce6Wk9Y7E';
     const REDIRECT_URI = encodeURIComponent('https://api.alimad.co/auth/hackatime/callback');
-    localStorage.setItem('h_cfg', JSON.stringify({ username: '', apiKey: '', targetHours: 2.0 }));
+    localStorage.setItem('h_cfg', JSON.stringify({ username: '', authToken: '', targetHours: 2.0 }));
     window.location.href = `https://hackatime.hackclub.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile+read`;
 });
 
@@ -242,9 +250,9 @@ function updateClock() {
 }
 
 async function sync(types) {
-    if (!cfg.apiKey || !cfg.username) return;
-    const standardHeaders = { 'Authorization': `Bearer ${cfg.apiKey}` };
-    const operationalHeaders = cfg.apiOpKey ? { 'Authorization': `Bearer ${cfg.apiOpKey}` } : standardHeaders;
+    if (!cfg.authToken || !cfg.username) return;
+    const standardHeaders = { 'Authorization': `Bearer ${cfg.authToken}` };
+    const operationalHeaders = cfg.oauthToken ? { 'Authorization': `Bearer ${cfg.oauthToken}` } : standardHeaders;
 
     const routes = {
         actual: {
