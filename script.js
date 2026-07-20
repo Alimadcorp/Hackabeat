@@ -1,4 +1,4 @@
-let cfg = { username: '', apiKey: '', targetHours: 2 };
+let cfg = { username: '', apiKey: '', targetHours: 2.0 };
 let startTimestamp = null, actualTotalSeconds = 0, lastHeartbeatTime = null;
 
 const locks = { actual: false, streak: false, heartbeat: false, potential: false };
@@ -13,8 +13,7 @@ const selectors = [
     'alertSettingsModal', 'alertSettingsBtn', 'closeAlertSettingsBtn', 'alertToggleBtn',
     'userProfile', 'userDisplayName', 'streakDisplay', 'logoutBtn', 'localClock',
     'themeToggle', 'flashContainer', 'alertBanner', 'reminderMinutes', 'audioUrlInput',
-    'timeAgoDisplay', 'actualTimeDisplay', 'potentialTimeDisplay', 'progressBar', 'progressText', 'sessionStartDisplay', 'infoModal', 'closeInfoBtn', 'infoOpenBtn', 'potential', 'potentialH',
-    'goalPromptModal', 'customGoalInput', 'confirmGoalBtn'
+    'timeAgoDisplay', 'actualTimeDisplay', 'potentialTimeDisplay', 'progressBar', 'progressText', 'sessionStartDisplay', 'infoModal', 'closeInfoBtn', 'infoOpenBtn', 'potential', 'potentialH'
 ];
 const d = {};
 selectors.forEach(s => d[s] = el(s));
@@ -24,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     handleOauth();
     loadCfg();
     initAlert();
-    initGoalPrompt();
     lucide.createIcons();
 
     setInterval(updateClock, 50);
@@ -68,40 +66,19 @@ async function handleOauth() {
         const profileData = await profileRes.json();
         const resolvedUsername = profileData.github_username || profileData.id.toString();
 
-        window.__oauth_payload = { username: resolvedUsername, token: accessToken };
+        cfg = {
+            username: resolvedUsername,
+            apiKey: accessToken,
+            targetHours: 2.0
+        };
 
+        localStorage.setItem('h_cfg', JSON.stringify(cfg));
         d.setupModal.classList.add('hidden');
-        d.goalPromptModal.classList.remove('hidden');
+        history.replaceState(null, document.title, window.location.pathname);
+        loadCfg();
     } catch (err) {
         console.error('Authentication configuration cycle error:', err);
     }
-}
-
-function initGoalPrompt() {
-    document.querySelectorAll('.goal-opt-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            d.customGoalInput.value = btn.dataset.hours;
-        });
-    });
-
-    d.confirmGoalBtn.addEventListener('click', () => {
-        const targetHours = parseFloat(d.customGoalInput.value) || 2.0;
-        if (window.__oauth_payload) {
-            cfg = {
-                username: window.__oauth_payload.username,
-                apiKey: window.__oauth_payload.token,
-                targetHours: targetHours
-            };
-            localStorage.setItem('h_cfg', JSON.stringify(cfg));
-            delete window.__oauth_payload;
-        } else {
-            cfg.targetHours = targetHours;
-            localStorage.setItem('h_cfg', JSON.stringify(cfg));
-        }
-        d.goalPromptModal.classList.add('hidden');
-        history.replaceState(null, document.title, window.location.pathname);
-        loadCfg();
-    });
 }
 
 function initTheme() {
@@ -212,7 +189,16 @@ async function sync(types) {
         actual: {
             url: `https://hackatime.hackclub.com/api/hackatime/v1/users/current/statusbar/today`,
             el: d.actualTimeDisplay,
-            fn: (json) => { actualTotalSeconds = json?.data?.grand_total?.total_seconds || 0; }
+            fn: (json) => {
+                actualTotalSeconds = json?.data?.grand_total?.total_seconds || 0;
+
+                const textStr = json?.data?.grand_total?.text || "";
+                const match = textStr.match(/(\d+(?:\.\d+)?)\s*h\s+goal/i);
+                if (match && match[1]) {
+                    cfg.targetHours = parseFloat(match[1]);
+                    localStorage.setItem('h_cfg', JSON.stringify(cfg));
+                }
+            }
         },
         streak: {
             url: `https://hackatime.hackclub.com/api/v1/authenticated/streak`,
@@ -329,4 +315,4 @@ function fmtDur(s) {
     const m = Math.floor((s % 3600) / 60);
     const sec = Math.floor(s % 60);
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-} 
+}
