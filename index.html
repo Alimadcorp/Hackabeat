@@ -36,7 +36,7 @@
 
 <body
     class="bg-theme-light dark:bg-theme-dark text-zinc-900 dark:text-zinc-100 h-screen overflow-hidden transition-colors duration-200 font-sans flex flex-col justify-between p-4 select-none">
-    <div id="flashContainer" class="fixed inset-0 pointer-events-none transition-colors duration-200 z-40"></div>
+    <div id="flashContainer" class="fixed inset-0 pointer-events-none transition-colors duration-50 z-40"></div>
 
     <header
         class="w-full flex flex-row justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-4 gap-4 flex-shrink-0">
@@ -64,17 +64,17 @@
                     title="Currently Hacking">
                     <span class="flex h-2 w-2 relative">
                         <span
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
                     </span>
                     <span><span class="hidden lg:inline">Currently hacking: </span><strong
                             class="text-zinc-900 dark:text-zinc-100" id="hacking">0</strong></span>
                 </div>
                 <div class="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1 rounded"
-                    title="Current position in global leaderboard">
+                    title="Current position in regional leaderboard">
                     <i data-lucide="globe" class="w-3.5 h-3.5 text-zinc-400"></i>
-                    <span><span class="hidden lg:inline">Global Rank: </span><strong
-                            class="text-zinc-900 dark:text-zinc-100" id="global_rank">Loading</strong></span>
+                    <span><span class="hidden lg:inline">Regional Rank: </span><strong
+                            class="text-zinc-900 dark:text-zinc-100" id="local_rank">Loading</strong></span>
                 </div>
             </div>
         </div>
@@ -82,6 +82,18 @@
         <div class="flex items-center gap-1">
             <span id="localClock" title="stop hovering over elements and checking their title and get coding >:("
                 class="text-xs mr-2 text-zinc-500 tracking-wider"></span>
+            <a href="https://live.alimad.co/stats/view?app=beat.alimad.co"
+                class="hidden sm:flex items-center gap-4 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                <div class="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1 rounded"
+                    title="People using this app rn">
+                    <span class="flex h-2 w-2 relative">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span><strong class="text-zinc-900 dark:text-zinc-100" id="live">1</strong></span>
+                </div>
+            </a>
             <button id="infoOpenBtn" title="view info :>"
                 class="dark:bg-transparent p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-900 transition-colors">
                 <i data-lucide="info" class="w-4 h-4 text-zinc-400"></i>
@@ -107,12 +119,12 @@
     <main class="w-full flex-grow flex flex-col justify-center max-w-5xl mx-auto h-full px-4 py-2">
 
         <div class="grid grid-cols-2 gap-8 items-end w-full mb-6">
-            <div data-refresh="streak" title="Current position in local leaderboard"
+            <div data-refresh="streak" title="Current position in global leaderboard"
                 class="p-1 cursor-pointer transition-all">
                 <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium flex items-center gap-1">
-                    Regional Rank
+                    Global Rank
                 </div>
-                <div class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-200 mt-1" id="local_rank">
+                <div class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-200 mt-1" id="global_rank">
                     Loading</div>
             </div>
 

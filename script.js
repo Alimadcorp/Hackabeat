@@ -7,6 +7,8 @@ let alertEnabled = false;
 let timeModeLost = false;
 let audio = new Audio();
 
+let alarming_situation = false;
+
 const getCoding = ["Get coding vro -_-", "BROOOO GET CODING", "Stop procrastinating", "Are you a Sabio Tang?", "Nah bro dont give up already :<"];
 
 const el = (id) => document.getElementById(id);
@@ -16,7 +18,7 @@ const selectors = [
     'userProfile', 'userDisplayName', 'streakDisplay', 'logoutBtn', 'localClock',
     'themeToggle', 'flashContainer', 'alertBanner', 'reminderMinutes', 'audioUrlInput',
     'timeAgoDisplay', 'actualTimeDisplay', 'potentialTimeDisplay', 'progressBar', 'progressText', 'sessionStartDisplay', 'infoModal', 'closeInfoBtn', 'infoOpenBtn', 'potential', 'potentialH', 'hacking', 'global_rank', 'local_rank', 'userPfp',
-    'dismiss', 'alertText'
+    'dismiss', 'alertText', "live"
 ];
 const d = {};
 selectors.forEach(s => d[s] = el(s));
@@ -27,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCfg();
     initAlert();
     lucide.createIcons();
-
+    localStorage.setItem("dismissed", false);
     setInterval(updateClock, 50);
     setInterval(calc, 50);
     setInterval(() => sync(['heartbeat', 'actual']), 60000);
@@ -110,6 +112,7 @@ function initAlert() {
 
     d.dismiss.addEventListener("click", () => {
         localStorage.setItem("dismissed", true);
+        d.alertBanner.classList.add('hidden');
         audio.pause();
     })
 
@@ -154,6 +157,41 @@ function updateToggleUI() {
     d.alertToggleBtn.className = `font-mono text-xs px-4 py-2 rounded font-bold tracking-widest transition-colors ${alertEnabled ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-500'}`;
 }
 
+function syncHackers() {
+    fetch("https://hackatime.hackclub.com/api/v1/currently_hacking").then(r => r.json()).then(data => { d.hacking.textContent = data.count });
+}
+function syncLeaderboard() {
+    fetch("https://api.alimad.co/beat/leaderboard?uid=" + cfg.uid).then(r => r.json()).then(dats => {
+        d.global_rank.textContent = "#" + dats.global_rank;
+        d.local_rank.textContent = "#" + dats.local_rank;
+        cfg.meta = {
+            name: dats.name,
+            pfp: dats.pfp,
+            url: dats.link
+        }
+        d.userDisplayName.textContent = cfg.meta?.name || cfg.username;
+        d.userDisplayName.href = cfg.meta?.url || "#";
+        if (dats.pfp && dats.pfp.startsWith("https://")) {
+            d.userPfp.src = dats.pfp;
+            d.userPfp.classList.toggle("hidden", false);
+        }
+        function styleRank(el, rank, isGlobal) {
+            const r = parseInt(rank);
+            el.className = isGlobal ? "text-2xl sm:text-3xl font-bold mt-1" : "text-zinc-900 dark:text-zinc-100";
+            el.style.cssText = "";
+            if (r === 1) { el.style.cssText = "color: #facc15;" }
+            else if (r <= 10) { el.style.cssText = "color: #22d3ee;" }
+            else if (r <= 50) { el.style.cssText = "color: #34d399;" }
+            else { el.classList.add(isGlobal ? 'text-zinc-800' : 'text-zinc-900', 'dark:text-zinc-200') }
+        }
+        styleRank(d.global_rank, dats.global_rank, true);
+        styleRank(d.local_rank, dats.local_rank, false);
+    });
+}
+function syncLive() {
+    fetch("https://live.alimad.co/ping?app=beat.alimad.co").then(r => r.text()).then(n => d.live.textContent = n);
+}
+
 function loadCfg() {
     const saved = localStorage.getItem('h_cfg');
     if (saved) {
@@ -164,30 +202,12 @@ function loadCfg() {
         if (cfg.username.trim() !== "") {
             d.setupModal.classList.add('hidden');
             sync(['actual', 'streak', 'heartbeat', 'potential']);
-            function syncHackers() {
-                fetch("https://hackatime.hackclub.com/api/v1/currently_hacking").then(r => r.json()).then(data => { d.hacking.textContent = data.count });
-            }
-            function syncLeaderboard() {
-                fetch("https://api.alimad.co/beat/leaderboard?uid=" + cfg.uid).then(r => r.json()).then(data => {
-                    d.global_rank.textContent = "#" + data.global_rank;
-                    d.local_rank.textContent = "#" + data.local_rank;
-                    cfg.meta = {
-                        name: data.name,
-                        pfp: data.pfp,
-                        url: data.link
-                    }
-                    d.userDisplayName.textContent = cfg.meta?.name || cfg.username;
-                    d.userDisplayName.href = cfg.meta?.url || "#";
-                    if (data.pfp && data.pfp.startsWith("https://")) {
-                        d.userPfp.src = data.pfp;
-                        d.userPfp.classList.toggle("hidden", false);
-                    }
-                });
-            }
+            syncLive();
             syncHackers();
             syncLeaderboard();
             setTimeout(syncLeaderboard, 2 * 60 * 1000);
             setTimeout(syncHackers, 30 * 1000);
+            setTimeout(syncLive, 15 * 1000);
         }
     } else {
         d.setupModal.classList.remove('hidden');
@@ -315,14 +335,18 @@ function calc() {
         d.timeAgoDisplay.textContent = fmtAgo(diff);
 
         const limit = (parseInt(d.reminderMinutes.value) || 3) * 60;
-        if (alertEnabled && diff > limit && localStorage.getItem("dismissed", "false") === "false") {
+        if (alertEnabled && diff > limit && localStorage.getItem("dismissed") !== "true") {
+            if (!alarming_situation) {
+                d.alertText.textContent = getCoding[Math.floor(Math.random() * getCoding.length)];
+                alarming_situation = true;
+            }
             d.alertBanner.classList.remove('hidden');
-            d.alertText.textContent = getCoding[Math.floor(Math.random() * getCoding.length)];
-            d.flashContainer.classList.toggle('bg-red-500/5', Math.floor(Date.now() / 500) % 2 === 0);
+            d.flashContainer.classList.toggle('bg-red-500/50', Math.floor(Date.now() / 500) % 2 === 0);
             audio.play().catch(() => { });
         } else {
+            alarming_situation = false;
             d.alertBanner.classList.add('hidden');
-            d.flashContainer.classList.remove('bg-red-500/5');
+            d.flashContainer.classList.remove('bg-red-500/50');
             audio.pause();
             audio.currentTime = 0;
         }
