@@ -7,13 +7,16 @@ let alertEnabled = false;
 let timeModeLost = false;
 let audio = new Audio();
 
+const getCoding = ["Get coding vro -_-"];
+
 const el = (id) => document.getElementById(id);
 const selectors = [
     'setupModal', 'saveconfigBtn',
     'alertSettingsModal', 'alertSettingsBtn', 'closeAlertSettingsBtn', 'alertToggleBtn',
     'userProfile', 'userDisplayName', 'streakDisplay', 'logoutBtn', 'localClock',
     'themeToggle', 'flashContainer', 'alertBanner', 'reminderMinutes', 'audioUrlInput',
-    'timeAgoDisplay', 'actualTimeDisplay', 'potentialTimeDisplay', 'progressBar', 'progressText', 'sessionStartDisplay', 'infoModal', 'closeInfoBtn', 'infoOpenBtn', 'potential', 'potentialH', 'hacking', 'global_rank', 'local_rank', 'userPfp'
+    'timeAgoDisplay', 'actualTimeDisplay', 'potentialTimeDisplay', 'progressBar', 'progressText', 'sessionStartDisplay', 'infoModal', 'closeInfoBtn', 'infoOpenBtn', 'potential', 'potentialH', 'hacking', 'global_rank', 'local_rank', 'userPfp',
+    'dismiss'
 ];
 const d = {};
 selectors.forEach(s => d[s] = el(s));
@@ -236,6 +239,7 @@ async function sync(types) {
                     const incoming = json.time;
                     if (lastHeartbeatTime && incoming > lastHeartbeatTime) {
                         lastHeartbeatTime = incoming;
+                        localStorage.setItem("dismissed", false);
                         sync(['actual']);
                     } else {
                         lastHeartbeatTime = incoming;
@@ -278,6 +282,11 @@ async function sync(types) {
     });
 }
 
+d.dismiss.addEventListener("click", () => {
+    localStorage.setItem("dismissed", true);
+    audio.pause();
+})
+
 function calc() {
     const now = Date.now() / 1000;
 
@@ -287,6 +296,7 @@ function calc() {
 
         const limit = (parseInt(d.reminderMinutes.value) || 3) * 60;
         if (alertEnabled && diff > limit) {
+            if (localStorage.getItem("dismissed", "false") === "true") return;
             d.alertBanner.classList.remove('hidden');
             d.flashContainer.classList.toggle('bg-red-500/5', Math.floor(Date.now() / 500) % 2 === 0);
             audio.play().catch(() => { });
