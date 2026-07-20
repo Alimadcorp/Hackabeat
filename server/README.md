@@ -1,5 +1,7 @@
 # server
 
+[Deploy using vercel](https://vercel.com/new/clone?repository-url=https://github.com/Alimadcorp/Hackabeat/tree/main/server&env=HACKATIME_CLIENT_ID,HACKATIME_CLIENT_SECRET,HC_COOKIE)
+
 For Hackatime OAuth
 
 For vars:
