@@ -44,7 +44,6 @@ async function handleOauth() {
     if (accessToken && username) {
         const saved = localStorage.getItem('h_cfg');
         const existing = saved ? JSON.parse(saved) : {};
-
         const f = await fetch(`https://hackatime.hackclub.com/api/hackatime/v1/users/${username}/statusbar/today`, { headers: { Authorization: "Bearer " + accessToken } });
         const r = await f.json();
 
