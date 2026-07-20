@@ -1,7 +1,7 @@
 let cfg = { username: '', authToken: '', targetHours: 2.0 };
 let startTimestamp = null, actualTotalSeconds = 0, lastHeartbeatTime = null;
 
-const locks = { actual: false, streak: false, heartbeat: false, potential: false };
+const locks = { actual: false, streak: false, heartbeat: false, potential: false, lb: false };
 let lastHr = new Date().getHours();
 let alertEnabled = false;
 let timeModeLost = false;
@@ -45,8 +45,8 @@ async function handleOauth() {
 
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
-    let key = params.get('key');
-    if (!key) {
+    let key = "";
+    if (!accessToken) {
         const apiKeyRes = await fetch('https://hackatime.hackclub.com/api/v1/authenticated/api_keys', {
             headers: { 'Authorization': `Bearer ${accessToken}` }
         });
@@ -168,34 +168,7 @@ function updateToggleUI() {
 function syncHackers() {
     fetch("https://hackatime.hackclub.com/api/v1/currently_hacking").then(r => r.json()).then(data => { d.hacking.textContent = data.count });
 }
-function syncLeaderboard() {
-    fetch("https://api.alimad.co/beat/leaderboard?uid=" + cfg.uid).then(r => r.json()).then(dats => {
-        d.global_rank.textContent = "#" + dats.global_rank;
-        d.local_rank.textContent = "#" + dats.local_rank;
-        cfg.meta = {
-            name: dats.name,
-            pfp: dats.pfp,
-            url: dats.link
-        }
-        d.userDisplayName.textContent = cfg.meta?.name || cfg.username;
-        d.userDisplayName.href = cfg.meta?.url || "#";
-        if (dats.pfp && dats.pfp.startsWith("https://")) {
-            d.userPfp.src = dats.pfp;
-            d.userPfp.classList.toggle("hidden", false);
-        }
-        function styleRank(el, rank, isGlobal) {
-            const r = parseInt(rank);
-            el.className = isGlobal ? "text-2xl sm:text-3xl font-bold mt-1" : "text-zinc-900 dark:text-zinc-100";
-            el.style.cssText = "";
-            if (r === 1) { el.style.cssText = "color: #facc15;" }
-            else if (r <= 10) { el.style.cssText = "color: #22d3ee;" }
-            else if (r <= 50) { el.style.cssText = "color: #34d399;" }
-            else { el.classList.add(isGlobal ? 'text-zinc-800' : 'text-zinc-900', 'dark:text-zinc-200') }
-        }
-        styleRank(d.global_rank, dats.global_rank, true);
-        styleRank(d.local_rank, dats.local_rank, false);
-    });
-}
+
 function syncLive() {
     fetch("https://live.alimad.co/ping?app=beat.alimad.co").then(r => r.text()).then(n => d.live.textContent = n);
 }
@@ -209,11 +182,10 @@ function loadCfg() {
         d.userProfile.classList.remove('opacity-40');
         if (cfg.username.trim() !== "") {
             d.setupModal.classList.add('hidden');
-            sync(['actual', 'streak', 'heartbeat', 'potential']);
+            sync(['actual', 'streak', 'heartbeat', 'potential', 'lb']);
             syncLive();
             syncHackers();
-            syncLeaderboard();
-            setTimeout(syncLeaderboard, 2 * 60 * 1000);
+            setTimeout(() => sync(['lb']), 2 * 60 * 1000);
             setTimeout(syncHackers, 30 * 1000);
             setTimeout(syncLive, 15 * 1000);
         }
@@ -244,7 +216,7 @@ function updateClock() {
     const curHr = now.getHours();
     if (curHr === 0 && lastHr !== 0) {
         startTimestamp = null;
-        sync(['actual', 'streak', 'heartbeat', 'potential']);
+        sync(['actual', 'streak', 'heartbeat', 'potential', 'lb']);
     }
     lastHr = curHr;
 }
@@ -311,6 +283,42 @@ async function sync(types) {
                     d.sessionStartDisplay.textContent = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
                 }
             }
+        },
+        lb: {
+            url: "https://api.alimad.co/beat/leaderboard?uid=" + cfg.uid,
+            el: d.global_rank,
+            headers: {},
+            fn: (dats) => {
+                d.local_rank.classList.add('opacity-30');
+                d.local_rank.classList.remove('opacity-100');
+
+                d.global_rank.textContent = "#" + dats.global_rank;
+                d.local_rank.textContent = "#" + dats.local_rank;
+                cfg.meta = {
+                    name: dats.name,
+                    pfp: dats.pfp,
+                    url: dats.link
+                };
+                d.userDisplayName.textContent = cfg.meta?.name || cfg.username;
+                d.userDisplayName.href = cfg.meta?.url || "#";
+                if (dats.pfp && dats.pfp.startsWith("https://")) {
+                    d.userPfp.src = dats.pfp;
+                    d.userPfp.classList.toggle("hidden", false);
+                }
+                function styleRank(element, rank, isGlobal) {
+                    const r = parseInt(rank);
+                    element.className = isGlobal ? "text-2xl sm:text-3xl font-bold mt-1" : "text-zinc-900 dark:text-zinc-100";
+                    element.style.cssText = "";
+                    if (r === 1) { element.style.cssText = "color: #facc15;" }
+                    else if (r <= 10) { element.style.cssText = "color: #22d3ee;" }
+                    else if (r <= 50) { element.style.cssText = "color: #34d399;" }
+                    else { element.classList.add(isGlobal ? 'text-zinc-800' : 'text-zinc-900', 'dark:text-zinc-200') }
+                }
+                styleRank(d.global_rank, dats.global_rank, true);
+                styleRank(d.local_rank, dats.local_rank, false);
+                d.local_rank.classList.add('opacity-100');
+                d.local_rank.classList.remove('opacity-30');
+            }
         }
     };
 
@@ -330,7 +338,7 @@ async function sync(types) {
         } finally {
             r.el.classList.add('opacity-100');
             r.el.classList.remove('opacity-30');
-            setTimeout(() => locks[t] = false, 1000);
+            setTimeout(() => locks[t] = false, 2000);
         }
     });
 }

@@ -71,7 +71,8 @@
                     <span><span class="hidden lg:inline">Currently hacking: </span><strong
                             class="text-zinc-900 dark:text-zinc-100" id="hacking">0</strong></span>
                 </div>
-                <div class="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1 rounded"
+                <div data-refresh="lb"
+                    class="flex items-center gap-1.5 cursor-pointer bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1 rounded"
                     title="Current position in regional leaderboard">
                     <i data-lucide="globe" class="w-3.5 h-3.5 text-zinc-400"></i>
                     <span><span class="hidden lg:inline">Regional Rank: </span><strong
@@ -82,7 +83,7 @@
 
         <div class="flex items-center gap-1">
             <span id="localClock" title="stop hovering over elements and checking their title and get coding >:("
-                class="text-xs mr-2 text-zinc-500 tracking-wider"></span>
+                class="text-xs mr-2 text-zinc-500"></span>
             <a href="https://live.alimad.co/stats/view?app=beat.alimad.co"
                 class="hidden sm:flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 <div class="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1 rounded"
@@ -111,16 +112,55 @@
         </div>
     </header>
 
+
+    <main id="setupModal" class="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div
+            class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-2xl shadow-2xl transition-all space-y-4">
+            <div class="border-zinc-200 dark:border-zinc-800">
+                <h2 class="text-3xl font-black text-cyan-500">
+                    Setup Hackabeat
+                </h2>
+            </div>
+            <div class="space-y-4 text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed font-normal">
+                <p
+                    class="text-base text-zinc-800 dark:text-zinc-200 font-medium bg-cyan-500/5 border border-cyan-500/10 rounded-xl p-4">
+                    Hackabeat is an app to boost your Hackatime activity! It tells u how much time u have coding since u
+                    started, and how much youve been procrastinating in between. Also reminds you to get coding whenever
+                    you're inactive for more than a few minutes :3
+                </p>
+
+                <p class="px-1 text-zinc-500 dark:text-zinc-400">
+                    This project is entirely client side apart from the hackatime oauth flow, it is also open source and
+                    deployed to github pages, you can check the code and deploy your own instance <a
+                        href="https://github.com/Alimadcorp/Hackabeat" target="_blank"
+                        class="underline font-medium text-cyan-500 hover:text-cyan-400 transition-colors">here</a>.
+                </p>
+            </div>
+            <div class="pt-2 space-y-4">
+                <p class="text-xs font-bold text-zinc-400 dark:text-zinc-500 text-center">
+                    Authenticate with Hackatime to get started!
+                </p>
+
+                <button id="saveconfigBtn"
+                    class="w-full bg-cyan-400 hover:bg-cyan-300 dark:bg-cyan-500 dark:hover:bg-cyan-400 text-black font-bold text-base p-3.5 rounded-xl transition-all duration-200 transform">
+                    Login with Hackatime
+                </button>
+            </div>
+
+        </div>
+    </main>
+
     <div id="alertBanner"
         class="hidden w-full bg-red-950/20 border border-red-900/30 text-red-500 p-2 text-center text-xs my-2 rounded flex-shrink-0 font-medium">
         <span id="alertText">Get coding bro -_-</span>
         <button id="dismiss" class="rounded bg-white/20 p-2">Ok</button>
     </div>
 
-    <main class="w-full flex-grow flex flex-col justify-center max-w-5xl mx-auto h-full px-4 py-2">
+    <section class="w-full flex-grow flex flex-col justify-center max-w-5xl mx-auto h-full px-4 py-2">
 
         <div class="grid grid-cols-2 gap-8 items-end w-full mb-6">
-            <div title="Current position in global leaderboard" class="p-1 transition-all">
+            <div title="Current position in global leaderboard" data-refresh="lb"
+                class=" cursor-pointer p-1 transition-all">
                 <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium flex items-center gap-1">
                     Global Rank
                 </div>
@@ -166,7 +206,7 @@
                 </div>
             </div>
         </div>
-    </main>
+    </section>
 
     <footer class="w-full pt-4 mt-auto space-y-2 pb-2 flex-shrink-0 max-w-5xl mx-auto"
         title="today's progress based on your set daily goal">
@@ -181,29 +221,6 @@
             </div>
         </div>
     </footer>
-
-    <div id="setupModal" class="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
-        <div
-            class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg">
-            <h2 class="text-2xl text-zinc-400">Setup Hackabeat</h2>
-            <p class="text-md my-3">
-                Hackabeat is an app to boost your Hackatime activity! It tells u how much time u have been coding since
-                u started, and how much youve been procrastinating in between. Also reminds you to get coding whenever
-                you're inactive for more than a few minutes :3
-            </p>
-            <p>
-                This project is entirely client side apart from the hackatime oauth flow, it is also open source and
-                deployed to github pages, you can check the code and deploy your own instance at
-                <a href="https://github.com/Alimadcorp/Hackabeat" target="_blank"
-                    class="hover:underline text-theme">Alimadcorp/Hackabeat</a>
-            </p>
-            <p>Authenticate with Hackatime to get started!</p>
-            <button id="saveconfigBtn"
-                class="w-full mt-6 bg-cyan-400 text-black font-bold text-lg p-3 rounded hover:bg-cyan-300 transition-colors">
-                Login with Hackatime
-            </button>
-        </div>
-    </div>
 
     <div id="alertSettingsModal"
         class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
