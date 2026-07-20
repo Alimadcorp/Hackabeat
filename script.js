@@ -120,6 +120,26 @@ function initAlert() {
         timeModeLost = !timeModeLost;
         localStorage.setItem("time_mode", timeModeLost);
     });
+    if (localStorage.getItem("alert_on") !== "true") return;
+    const alertEl = el("interaction-alert");
+    alertEl.classList.remove("hidden");
+    alertEl.classList.add("flex");
+
+    const dismiss = () => {
+        alertEl.style.opacity = "0";
+        setTimeout(() => alertEl.remove(), 300);
+        window.removeEventListener("click", dismiss, true);
+        window.removeEventListener("keydown", dismiss, true);
+        window.removeEventListener("touchstart", dismiss, true);
+    };
+    window.addEventListener("click", dismiss, true);
+    window.addEventListener("keydown", dismiss, true);
+    window.addEventListener("touchstart", dismiss, true);
+
+    el("enable-sound")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dismiss();
+    });
 }
 
 function preloadAudio(url) {
