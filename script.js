@@ -201,8 +201,8 @@ async function sync(types) {
             el: d.timeAgoDisplay,
             headers: standardHeaders,
             fn: (json) => {
-                if (json?.heartbeat) {
-                    const incoming = json.heartbeat.time;
+                if (json?.time) {
+                    const incoming = json.time;
                     if (lastHeartbeatTime && incoming > lastHeartbeatTime) {
                         lastHeartbeatTime = incoming;
                         sync(['actual']);
