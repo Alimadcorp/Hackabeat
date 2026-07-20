@@ -39,9 +39,13 @@
                 title="already leaving? :'(">Log
                 out</button>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center">
             <span id="localClock" title="stop hovering over elements and checking their title and get coding >:("
-                class="text-sm text-zinc-500"></span>
+                class="text-sm mr-1 text-zinc-500"></span>
+            <button id="infoOpenBtn" title="view info :>"
+                class="dark:bg-black p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
+                <i data-lucide="info" class="w-4 h-4"></i>
+            </button>
             <button id="alertSettingsBtn" title="settings :3"
                 class="dark:bg-black p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
                 <i data-lucide="settings" class="w-4 h-4"></i>
@@ -90,10 +94,8 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start w-full">
-            <div data-refresh="potential"
-                title="amount of time you could have tracked if you had been coding continuously since you started, today"
-                class="p-2 cursor-pointer transition-all">
-                <div class="text-sm sm:text-xs text-zinc-500">Time since you started coding today</div>
+            <div data-refresh="potential" id="potential" title="" class="p-2 cursor-pointer transition-all">
+                <div class="text-sm sm:text-xs text-zinc-500" id="potentialH">Time since you started coding today</div>
                 <div id="potentialTimeDisplay"
                     class="text-4xl sm:text-[4vw] opacity-30 transition-opacity duration-150 leading-none">
                     00:00:00</div>
@@ -154,22 +156,60 @@
                 for
                 more than a certain amount of minutes</span>
             <div></div>
-            <div class="space-y-2">
+            <div class="space-y-2" title="time after which the alarm should go off">
                 <label class="text-sm text-zinc-500">Limit
                     (Minutes)</label>
                 <input id="reminderMinutes" type="text" value="3"
                     class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
             </div>
-            <div class="space-y-2">
+            <div class="space-y-2" title="source of the alarm sound, can be any audio file on the internet">
                 <label class="text-sm text-zinc-500">Sound</label>
                 <input id="audioUrlInput" type="text"
                     value="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"
                     class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
             </div>
 
-            <button id="closeAlertSettingsBtn"
+            <button id="closeAlertSettingsBtn" title="it saves to localStorage and goes back to the main app"
                 class="w-full bg-white text-black font-bold text-sm p-3 rounded hover:bg-zinc-200 transition-colors">Save
                 & exit</button>
+        </div>
+    </div>
+
+
+    <div id="infoModal"
+        class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div
+            class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg space-y-2">
+            <h2 class="text-lg text-zinc-400" title="info on how it works and why">README.md</h2>
+
+            <div class="flex flex-col gap-1 items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded"
+                title="mmmm u gotta put the mouse sunwhere else if this is annoying">
+                <h2 class="text-lg font-bold">Hackabeat</h2>
+
+                <p>Hackabeat, an app for hackclubbers; to show exactly when you started coding, how much
+                    time
+                    you would have made if you had been coding constantly since you started, how much you've actually
+                    recorded, and set up a reminder to work after X minutes of inactivity!</p>
+
+                <h2 class="text-lg font-bold">How it works</h2>
+
+                <p>To question how this works, we need to question how Hackatime works.</p>
+
+                <p>Hackatime tracks time using heartbeats. Whenever you write some code, it uploads a heartbeat. If the
+                    time interval between two heartbeats is less than 5 minutes, Hackatime counts it as time spent
+                    coding.
+                    This app alerts the user if they spend more than 3 minutes idle, so that they can track more time.
+                </p>
+
+                <p class="text-sm">(As far as I know, this is not against Hackatime policy, but if I'm wrong, please
+                    correct me)</p>
+
+                <p>A project by Muhammad Ali :3</p>
+                <a class="underline" href="https://github.com/Alimadcorp/Hackabeat">Source code</a>
+            </div>
+
+            <button id="closeInfoBtn" title="does this need an explanation?"
+                class="w-full bg-white text-black font-bold text-sm p-3 rounded hover:bg-zinc-200 transition-colors">Back</button>
         </div>
     </div>
 

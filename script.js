@@ -4,6 +4,7 @@ let startTimestamp = null, actualTotalSeconds = 0, lastHeartbeatTime = null;
 const locks = { actual: false, streak: false, heartbeat: false, potential: false };
 let lastHr = new Date().getHours();
 let alertEnabled = false;
+let timeModeLost = false; // if this is true, show the time lost since u started coding today
 let audio = new Audio();
 
 const el = (id) => document.getElementById(id);
@@ -12,7 +13,7 @@ const selectors = [
     'alertSettingsModal', 'alertSettingsBtn', 'closeAlertSettingsBtn', 'alertToggleBtn',
     'userProfile', 'userDisplayName', 'streakDisplay', 'logoutBtn', 'localClock',
     'themeToggle', 'flashContainer', 'alertBanner', 'reminderMinutes', 'audioUrlInput',
-    'timeAgoDisplay', 'actualTimeDisplay', 'potentialTimeDisplay', 'progressBar', 'progressText', 'sessionStartDisplay'
+    'timeAgoDisplay', 'actualTimeDisplay', 'potentialTimeDisplay', 'progressBar', 'progressText', 'sessionStartDisplay', 'infoModal', 'closeInfoBtn', 'infoOpenBtn', 'potential', 'potentialH'
 ];
 const d = {};
 selectors.forEach(s => d[s] = el(s));
@@ -44,6 +45,7 @@ function initAlert() {
     alertEnabled = localStorage.getItem('alert_on') === 'true';
     d.reminderMinutes.value = localStorage.getItem('alert_mins') || '3';
     d.audioUrlInput.value = localStorage.getItem('alert_audio') || 'https://myinstants.com/media/sounds/epic.mp3';
+    timeModeLost = localStorage.getItem('time_mode') === 'true';
 
     preloadAudio(d.audioUrlInput.value);
     updateToggleUI();
@@ -53,6 +55,7 @@ function initAlert() {
         updateToggleUI();
     });
 
+    d.infoOpenBtn.addEventListener('click', () => d.infoModal.classList.remove('hidden'));
     d.alertSettingsBtn.addEventListener('click', () => d.alertSettingsModal.classList.remove('hidden'));
     d.reminderMinutes.addEventListener('input', (e) => e.target.value = e.target.value.replace(/\D/g, ''));
 
@@ -67,6 +70,16 @@ function initAlert() {
 
         preloadAudio(d.audioUrlInput.value);
         d.alertSettingsModal.classList.add('hidden');
+    });
+
+    d.closeInfoBtn.addEventListener('click', () => {
+        d.infoModal.classList.add('hidden');
+    });
+
+    d.potential.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        timeModeLost = !timeModeLost;
+        localStorage.setItem("time_mode", timeModeLost);
     });
 }
 
@@ -218,7 +231,22 @@ function calc() {
     }
 
     d.actualTimeDisplay.textContent = fmtDur(actualTotalSeconds);
-    d.potentialTimeDisplay.textContent = startTimestamp ? fmtDur(Math.max(0, now - startTimestamp)) : fmtDur(0);
+
+    if (startTimestamp) {
+        const totalPossibleSeconds = Math.max(0, now - startTimestamp);
+        if (timeModeLost) {
+            const lostSeconds = Math.max(0, totalPossibleSeconds - actualTotalSeconds);
+            d.potentialTimeDisplay.textContent = fmtDur(lostSeconds);
+            d.potential.title = "amount of time spent not coding since you started coding today";
+            d.potentialH.textContent = "Time lost today";
+        } else {
+            d.potentialTimeDisplay.textContent = fmtDur(totalPossibleSeconds);
+            d.potential.title = "amount of time you could have tracked if you had been coding continuously since you started, today. right click to change mode";
+            d.potentialH.textContent = "Time since you started coding today";
+        }
+    } else {
+        d.potentialTimeDisplay.textContent = fmtDur(0);
+    }
 
     const target = cfg.targetHours * 3600;
     const pct = target > 0 ? Math.min(500, (actualTotalSeconds / target) * 100) : 0;

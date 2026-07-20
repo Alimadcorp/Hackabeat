@@ -1,6 +1,6 @@
 ## Hackabeat
 
-Never miss a hackatime beat, app for hackclubbers; know exactly when you started coding, how much time you would have made if you had been coding constantly since you started, how much you've actually recorded, and set up a reminder to work after X minutes of activity!
+Hackabeat, an app for hackclubbers; to show exactly when you started coding, how much time you would have made if you had been coding constantly since you started, how much you've actually recorded, and set up a reminder to work after X minutes of inactivity!
 
 ## How it works
 
