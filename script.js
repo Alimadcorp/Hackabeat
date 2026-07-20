@@ -9,7 +9,7 @@ let audio = new Audio();
 
 const el = (id) => document.getElementById(id);
 const selectors = [
-    'setupModal', 'saveconfigBtn',
+    'setupModal', 'saveconfigBtn', 'setupStep1', 'setupStep2', 'dailyGoalInput', 'confirmGoalBtn',
     'alertSettingsModal', 'alertSettingsBtn', 'closeAlertSettingsBtn', 'alertToggleBtn',
     'userProfile', 'userDisplayName', 'streakDisplay', 'logoutBtn', 'localClock',
     'themeToggle', 'flashContainer', 'alertBanner', 'reminderMinutes', 'audioUrlInput',
@@ -36,25 +36,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function handleOauth() {
     const hash = window.location.hash.substring(1);
-    if (!hash) return; // ruh
+    if (!hash) return;
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
-    const username = params.get('username');
 
-    if (accessToken && username) {
-        const saved = localStorage.getItem('h_cfg');
-        const existing = saved ? JSON.parse(saved) : {};
-        const f = await fetch(`https://hackatime.hackclub.com/api/hackatime/v1/users/${username}/statusbar/today`, { headers: { Authorization: "Bearer " + accessToken } });
-        const r = await f.json();
+    if (accessToken) {
+        try {
+            // Use the OAuth specific route to fetch authenticated user data
+            const userFetch = await fetch('https://hackatime.hackclub.com/api/v1/authenticated/me', {
+                headers: { Authorization: "Bearer " + accessToken }
+            });
+            const userData = await userFetch.json();
+            const username = userData.github_username || userData.slack_id || "User";
 
-        cfg = {
-            username: username,
-            apiKey: accessToken,
-            targetHours: r.data.goal?.target_seconds / 3600 || existing.targetHours || 2.0
-        };
+            // Stage variables into config temporarily
+            cfg.username = username;
+            cfg.apiKey = accessToken;
 
-        localStorage.setItem('h_cfg', JSON.stringify(cfg));
-        history.replaceState(null, document.title, window.location.pathname + window.location.search);
+            // Show final custom popup inside modal instead of window.prompt
+            d.setupStep1.classList.add('hidden');
+            d.setupStep2.classList.remove('hidden');
+            d.setupModal.classList.remove('hidden');
+
+            d.confirmGoalBtn.onclick = () => {
+                const selectedGoal = parseFloat(d.dailyGoalInput.value) || 2.0;
+                cfg.targetHours = selectedGoal;
+
+                localStorage.setItem('h_cfg', JSON.stringify(cfg));
+                d.setupModal.classList.add('hidden');
+
+                // Clear URL frag and finish booting environment
+                history.replaceState(null, document.title, window.location.pathname + window.location.search);
+                d.userDisplayName.textContent = cfg.username;
+                d.userProfile.classList.remove('opacity-40');
+                sync(['actual', 'streak', 'heartbeat', 'potential']);
+            };
+        } catch (e) {
+            console.error("Authentication setup sequence failed", e);
+        }
     }
 }
 
@@ -122,26 +141,24 @@ function loadCfg() {
     const saved = localStorage.getItem('h_cfg');
     if (saved) {
         cfg = JSON.parse(saved);
-        d.userDisplayName.textContent = cfg.username;
-        d.userProfile.classList.remove('opacity-40');
-        if (cfg.username.trim() !== "") d.setupModal.classList.add('hidden');
-        sync(['actual', 'streak', 'heartbeat', 'potential']);
+        if (cfg.username.trim() !== "") {
+            d.userDisplayName.textContent = cfg.username;
+            d.userProfile.classList.remove('opacity-40');
+            d.setupModal.classList.add('hidden');
+            sync(['actual', 'streak', 'heartbeat', 'potential']);
+        } else {
+            d.setupModal.classList.remove('hidden');
+        }
     } else {
         d.setupModal.classList.remove('hidden');
     }
 }
 
 d.saveconfigBtn.addEventListener('click', () => {
-    if (cfg.apiKey && cfg.username) {
-        cfg.targetHours = 2.0;
-        localStorage.setItem('h_cfg', JSON.stringify(cfg));
-        d.setupModal.classList.add('hidden');
-        return;
-    }
     const CLIENT_ID = 'XeZSxRcmM3D5SR_437caoQUvmPFc2xkg18ce6Wk9Y7E';
     const REDIRECT_URI = encodeURIComponent('https://api.alimad.co/auth/hackatime/callback');
     localStorage.setItem('h_cfg', JSON.stringify({ username: '', apiKey: '', targetHours: 2.0 }));
-    window.location.href = `https://hackatime.hackclub.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile+read`;
+    window.location.href = `https://hackatime.hackclub.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=profile+read`;
 });
 
 d.logoutBtn.addEventListener('click', () => {
@@ -161,28 +178,28 @@ function updateClock() {
 }
 
 async function sync(types) {
-    if (!cfg.apiKey || !cfg.username) return;
+    if (!cfg.apiKey) return;
     const headers = { 'Authorization': `Bearer ${cfg.apiKey}` };
 
     const routes = {
         actual: {
-            url: `https://hackatime.hackclub.com/api/hackatime/v1/users/${cfg.username}/statusbar/today`,
+            url: 'https://hackatime.hackclub.com/api/v1/authenticated/hours',
             el: d.actualTimeDisplay,
-            fn: (json) => { actualTotalSeconds = json?.data?.grand_total?.total_seconds || 0; }
+            fn: (json) => { actualTotalSeconds = json?.total_seconds || 0; }
         },
         streak: {
-            url: `https://hackatime.hackclub.com/api/v1/users/${cfg.username}/stats?features=languages`,
+            url: 'https://hackatime.hackclub.com/api/v1/authenticated/streak',
             el: d.streakDisplay,
             fn: (json) => {
-                const s = json?.data?.streak || 0;
+                const s = json?.streak_days || 0;
                 d.streakDisplay.textContent = `${s} day${s === 1 ? '' : 's'}`;
             }
         },
         heartbeat: {
-            url: 'https://hackatime.hackclub.com/api/v1/my/heartbeats/most_recent',
+            url: 'https://hackatime.hackclub.com/api/v1/authenticated/heartbeats/latest',
             el: d.timeAgoDisplay,
             fn: (json) => {
-                if (json?.has_heartbeat && json.heartbeat) {
+                if (json?.heartbeat) {
                     const incoming = json.heartbeat.time;
                     if (lastHeartbeatTime && incoming > lastHeartbeatTime) {
                         lastHeartbeatTime = incoming;
