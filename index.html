@@ -5,14 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hackabeat</title>
-    <meta property="og:title" content=Hackabeat>
-    <meta property="og:site_name" content=Hackabeat>
-    <meta property="og:url" content=https://beat.alimad.co>
-    <meta property="og:description" content="Hackabeat, an app for hackclubbers; to show exactly when you started coding,
-        how much time you would have made if you had been coding constantly since you started, how much you've actually
-        recorded, and set up a reminder to work after X minutes of inactivity!">
-    <meta property=" og:type" content=website>
-    <link rel="icon" href=https://hackatime.hackclub.com/assets/favicon-615aa3c5.png>
+    <meta property="og:title" content="Hackabeat">
+    <meta property="og:site_name" content="Hackabeat">
+    <meta property="og:url" content="https://beat.alimad.co">
+    <meta property="og:description"
+        content="Hackabeat, an app for hackclubbers; to show exactly when you started coding, how much time you would have made if you had been coding constantly since you started, how much you've actually recorded, and set up a reminder to work after X minutes of inactivity!">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="https://hackatime.hackclub.com/assets/favicon-615aa3c5.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
     </style>
@@ -36,93 +35,136 @@
 </head>
 
 <body
-    class="bg-theme-light dark:bg-theme-dark text-zinc-900 dark:text-zinc-100 min-h-screen transition-colors duration-200 font-sans flex flex-col justify-between overflow-x-hidden p-6 sm:p-12">
+    class="bg-theme-light dark:bg-theme-dark text-zinc-900 dark:text-zinc-100 h-screen overflow-hidden transition-colors duration-200 font-sans flex flex-col justify-between p-4 select-none">
     <div id="flashContainer" class="fixed inset-0 pointer-events-none transition-colors duration-200 z-40"></div>
 
-    <header class="w-full flex flex-wrap justify-between items-center pb-6 gap-4">
-        <div id="userProfile" class="opacity-40 transition-opacity duration-300 flex items-center gap-3">
-            <span id="userDisplayName" title="Dats me!" class="font-bold text-sm"></span>
-            <button id="logoutBtn"
-                class="bg-white text-black text-xs px-3 py-1 rounded hover:bg-zinc-200 transition-colors"
-                title="already leaving? :'(">Log
-                out</button>
+    <header
+        class="w-full flex flex-row justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-4 gap-4 flex-shrink-0">
+        <div class="flex items-center gap-4">
+            <img id="userPfp" src="" alt="Looks like your pfp -_-"
+                class="hidden w-7 h-7 rounded-full object-cover border border-zinc-200 dark:border-zinc-800" />
+            <div id="userProfile" class="opacity-40 transition-opacity duration-300 flex items-center gap-3">
+                <a href="#" target="_blank" id="userDisplayName" title="Dats me!"
+                    class="hover:underline font-bold text-sm"></a>
+                <div class="flex items-center text-orange-500 font-bold text-sm bg-orange-500/10 px-2 py-1 h-7 rounded gap-1"
+                    title="Your current coding streak!">
+                    <i data-lucide="flame" class="w-4 h-4 fill-orange-500"></i>
+                    <span><span id="streakDisplay">0</span><span class="hidden lg:inline"> day<span
+                                id="st-s">s</span></span></span>
+                </div>
+                <button id="logoutBtn"
+                    class="bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs px-2 py-1 h-7 rounded hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+                    title="already leaving? :'("><i data-lucide="log-out"
+                        class="w-3.5 h-3.5 text-zinc-400"></i></button>
+            </div>
+
+            <div
+                class="hidden sm:flex items-center gap-4 text-xs font-medium text-zinc-500 dark:text-zinc-400 border-l border-zinc-200 dark:border-zinc-800 pl-4">
+                <div class="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1 rounded"
+                    title="Currently Hacking">
+                    <span class="flex h-2 w-2 relative">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span><span class="hidden lg:inline">Currently hacking: </span><strong
+                            class="text-zinc-900 dark:text-zinc-100" id="hacking">0</strong></span>
+                </div>
+                <div class="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1 rounded"
+                    title="Current position in global leaderboard">
+                    <i data-lucide="globe" class="w-3.5 h-3.5 text-zinc-400"></i>
+                    <span><span class="hidden lg:inline">Global Rank: </span><strong
+                            class="text-zinc-900 dark:text-zinc-100">Loading</strong></span>
+                </div>
+            </div>
         </div>
-        <div class="flex items-center">
+
+        <div class="flex items-center gap-1">
             <span id="localClock" title="stop hovering over elements and checking their title and get coding >:("
-                class="text-sm mr-1 text-zinc-500"></span>
+                class="text-xs mr-2 text-zinc-500 tracking-wider"></span>
             <button id="infoOpenBtn" title="view info :>"
-                class="dark:bg-black p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
-                <i data-lucide="info" class="w-4 h-4"></i>
+                class="dark:bg-transparent p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-900 transition-colors">
+                <i data-lucide="info" class="w-4 h-4 text-zinc-400"></i>
             </button>
             <button id="alertSettingsBtn" title="settings :3"
-                class="dark:bg-black p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
-                <i data-lucide="settings" class="w-4 h-4"></i>
+                class="dark:bg-transparent p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-900 transition-colors">
+                <i data-lucide="settings" class="w-4 h-4 text-zinc-400"></i>
             </button>
             <button title="if the background is already dark, do not press for your own better" id="themeToggle"
-                class="dark:bg-black p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
-                <i data-lucide="sun" class="w-4 h-4 dark:hidden"></i>
-                <i data-lucide="moon" class="hidden dark:block w-4 h-4"></i>
+                class="dark:bg-transparent p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-900 transition-colors">
+                <i data-lucide="sun" class="w-4 h-4 dark:hidden text-zinc-500"></i>
+                <i data-lucide="moon" class="hidden dark:block w-4 h-4 text-zinc-400"></i>
             </button>
         </div>
     </header>
 
-    <div id="alertBanner" class="hidden w-full bg-red-950/20 text-red-500 p-4 text-center text-sm my-4 rounded">
+    <div id="alertBanner"
+        class="hidden w-full bg-red-950/20 border border-red-900/30 text-red-500 p-2 text-center text-xs my-2 rounded flex-shrink-0 font-medium">
         Get coding bro -_-
     </div>
-    <main class="w-full flex-grow flex flex-col justify-center my-auto space-y-8 sm:space-y-16">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end w-full">
-            <div data-refresh="streak" title="amount of contiguous days you've been coding"
-                class="p-2 cursor-pointer transition-all">
-                <div class="text-sm sm:text-xs text-zinc-500">Streak</div>
-                <div id="streakDisplay"
-                    class="text-4xl sm:text-[4vw] opacity-30 transition-opacity duration-150 leading-none">
-                    0 days</div>
+
+    <main class="w-full flex-grow flex flex-col justify-center max-w-5xl mx-auto h-full px-4 py-2">
+
+        <div class="grid grid-cols-2 gap-8 items-end w-full mb-6">
+            <div data-refresh="streak" title="Current position in local leaderboard"
+                class="p-1 cursor-pointer transition-all">
+                <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium flex items-center gap-1">
+                    Local Rank
+                </div>
+                <div class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-200 mt-1">Loading</div>
             </div>
 
             <div data-refresh="heartbeat" title="how much time ago you made your last edit"
-                class="p-2 cursor-pointer transition-all sm:text-right">
-                <div class="text-sm sm:text-xs text-zinc-500">Time
-                    Since
+                class="p-1 cursor-pointer transition-all text-right">
+                <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">Since
                     Last Heartbeat</div>
                 <div id="timeAgoDisplay"
-                    class="text-4xl sm:text-[4vw] opacity-30 transition-opacity duration-150 leading-none">
+                    class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-200 mt-1 opacity-30 transition-opacity duration-150">
                     uhhh</div>
             </div>
         </div>
+
         <div data-refresh="actual"
             title="official amount of time that was tracked today, you'll also see it on ur hackatime dashboard"
-            class="w-full p-4 sm:py-20 rounded-xl cursor-pointer transition-all text-center">
-            <div class="text-xs sm:text-sm text-zinc-400">
+            class="w-full py-6 dark:bg-zinc-950/20 border border-zinc-200/50 dark:border-zinc-900/50 rounded-2xl cursor-pointer transition-all text-center backdrop-blur-sm shadow-sm my-auto">
+            <div class="text-sm text-zinc-400 dark:text-zinc-500 font-semibold mb-1">
                 Time Tracked Today
             </div>
             <div id="actualTimeDisplay"
-                class="text-5xl sm:text-[11vw] font-black opacity-30 transition-opacity duration-150 leading-none select-none">
+                class="text-6xl sm:text-[7.5vw] font-black opacity-30 transition-opacity duration-150 select-none text-zinc-900 dark:text-white">
                 00:00:00
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start w-full">
-            <div data-refresh="potential" id="potential" title="" class="p-2 cursor-pointer transition-all">
-                <div class="text-sm sm:text-xs text-zinc-500" id="potentialH">Time since you started coding today</div>
+        <div class="grid grid-cols-2 gap-8 items-start w-full mt-6">
+            <div data-refresh="potential" id="potential" title="" class="p-1 cursor-pointer transition-all">
+                <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium" id="potentialH">Since Started
+                </div>
                 <div id="potentialTimeDisplay"
-                    class="text-4xl sm:text-[4vw] opacity-30 transition-opacity duration-150 leading-none">
+                    class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-200 mt-1 opacity-30 transition-opacity duration-150">
                     00:00:00</div>
             </div>
-            <div class="p-2 sm:text-right" title="time when your first heartbeat was recorded today">
-                <div class="text-sm sm:text-xs text-zinc-500">Started coding at</div>
-                <div id="sessionStartDisplay" class="text-4xl sm:text-[4vw] leading-none">--:--:--
+            <div class="p-1 text-right" title="time when your first heartbeat was recorded today">
+                <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">Started
+                    coding at</div>
+                <div id="sessionStartDisplay"
+                    class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-200 mt-1">--:--:--
                 </div>
             </div>
         </div>
     </main>
 
-    <footer class="w-full pt-6 mt-auto space-y-3 pb-4" title="today's progress based on your set daily goal">
-        <div class="flex justify-between items-center text-xs text-zinc-500">
-            <span>Today's progress</span>
-            <span id="progressText">0.0%</span>
+    <footer class="w-full pt-4 mt-auto space-y-2 pb-2 flex-shrink-0 max-w-5xl mx-auto"
+        title="today's progress based on your set daily goal">
+        <div class="flex justify-between items-center text-xs font-medium text-zinc-400 dark:text-zinc-500">
+            <span class="progress"></span>
+            <span id="progressText"
+                class="bg-zinc-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded text-zinc-800 dark:text-zinc-200">0.0%</span>
         </div>
-        <div class="h-2 w-full bg-zinc-200 dark:bg-zinc-950 overflow-hidden rounded-full">
-            <div id="progressBar" class="h-full bg-zinc-900 dark:bg-zinc-100 w-0 transition-all duration-300"></div>
+        <div
+            class="h-2.5 w-full bg-zinc-200 dark:bg-zinc-950 overflow-hidden rounded-full border border-zinc-300/30 dark:border-zinc-900/55">
+            <div id="progressBar" class="h-full bg-zinc-900 dark:bg-zinc-100 w-0 transition-all duration-300 shadow-sm">
+            </div>
         </div>
     </footer>
 
@@ -130,14 +172,12 @@
         <div
             class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg">
             <h2 class="text-2xl text-zinc-400">Setup Hackabeat</h2>
-
             <p class="text-md my-3">
                 Hackabeat is an app to boost your Hackatime activity! It tells u how much time u have been coding since
                 u started, and how much youve been procrastinating in between. Also reminds you to get coding whenever
                 you're inactive for more than a few minutes :3
             </p>
             <p>Authenticate with Hackatime to get started!</p>
-
             <button id="saveconfigBtn"
                 class="w-full mt-6 bg-cyan-400 text-black font-bold text-lg p-3 rounded hover:bg-cyan-300 transition-colors">
                 Connect Hackatime
@@ -148,27 +188,23 @@
     <div id="alertSettingsModal"
         class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
         <div
-            class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg space-y-2">
+            class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg space-y-4">
             <h2 class="text-lg text-zinc-400" title="Yes, settings">Settings</h2>
-
             <div class="flex items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded"
                 title="Idle warnings are audio warnings that go off when you stop coding for more than a certain amount of minutes">
                 <span class="text-md text-zinc-400">Idle warnings</span>
                 <button id="alertToggleBtn"
                     class="bg-white text-black px-4 py-2 rounded transition-colors">Disabled</button>
             </div>
-            <span class="text-sm mt-3 text-zinc-400">Idle warnings are audio warnings that go off when you stop coding
-                for
-                more than a certain amount of minutes</span>
-            <div></div>
-            <div class="space-y-2" title="time after which the alarm should go off">
-                <label class="text-sm text-zinc-500">Limit
-                    (Minutes)</label>
+            <p class="text-xs text-zinc-400">Idle warnings are audio warnings that go off when you stop coding for more
+                than a certain amount of minutes</p>
+            <div class="space-y-1" title="time after which the alarm should go off">
+                <label class="text-xs text-zinc-500 font-semibold">Limit (Minutes)</label>
                 <input id="reminderMinutes" type="text" value="3"
                     class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
             </div>
-            <div class="space-y-2" title="source of the alarm sound, can be any audio file on the internet">
-                <label class="text-sm text-zinc-500">Sound</label>
+            <div class="space-y-1" title="source of the alarm sound, can be any audio file on the internet">
+                <label class="text-xs text-zinc-500 font-semibold">Sound</label>
                 <input id="audioUrlInput" type="text"
                     value="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"
                     class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
@@ -180,39 +216,31 @@
         </div>
     </div>
 
-
     <div id="infoModal"
         class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
         <div
-            class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg space-y-2">
+            class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-6 rounded-lg space-y-2 overflow-y-auto max-h-[90vh]">
             <h2 class="text-lg text-zinc-400" title="info on how it works and why">README.md</h2>
-
-            <div class="flex flex-col gap-1 items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded"
+            <div class="flex flex-col gap-2 p-3 border border-zinc-200 dark:border-zinc-800 rounded text-sm text-zinc-300 space-y-2"
                 title="mmmm u gotta put the mouse sunwhere else if this is annoying">
-                <h2 class="text-lg font-bold">Hackabeat</h2>
-
-                <p>Hackabeat, an app for hackclubbers; to show exactly when you started coding, how much
-                    time
-                    you would have made if you had been coding constantly since you started, how much you've actually
-                    recorded, and set up a reminder to work after X minutes of inactivity!</p>
-
-                <h2 class="text-lg font-bold">How it works</h2>
-
+                <h2 class="text-base font-bold text-white">Hackabeat</h2>
+                <p>Hackabeat, an app for hackclubbers; to show exactly when you started coding, how much time you would
+                    have made if you had been coding constantly since you started, how much you've actually recorded,
+                    and set up a reminder to work after X minutes of inactivity!</p>
+                <h2 class="text-base font-bold text-white">How it works</h2>
                 <p>To question how this works, we need to question how Hackatime works.</p>
-
                 <p>Hackatime tracks time using heartbeats. Whenever you write some code, it uploads a heartbeat. If the
                     time interval between two heartbeats is less than 5 minutes, Hackatime counts it as time spent
-                    coding.
-                    This app alerts the user if they spend more than 3 minutes idle, so that they can track more time.
-                </p>
-
-                <p class="text-sm">(As far as I know, this is not against Hackatime policy, but if I'm wrong, please
-                    correct me)</p>
-
-                <p>A project by Muhammad Ali :3</p>
-                <a class="underline" href="https://github.com/Alimadcorp/Hackabeat">Source code</a>
+                    coding. This app alerts the user if they spend more than 3 minutes idle, so that they can track more
+                    time.</p>
+                <p class="text-xs text-zinc-500">(As far as I know, this is not against Hackatime policy, but if I'm
+                    wrong, please correct me)</p>
+                <div class="pt-2 border-t border-zinc-800 flex justify-between items-center">
+                    <span class="text-xs">A project by Muhammad Ali :3</span>
+                    <a class="underline text-xs text-cyan-400" href="https://github.com/Alimadcorp/Hackabeat">Source
+                        code</a>
+                </div>
             </div>
-
             <button id="closeInfoBtn" title="does this need an explanation?"
                 class="w-full bg-white text-black font-bold text-sm p-3 rounded hover:bg-zinc-200 transition-colors">Back</button>
         </div>

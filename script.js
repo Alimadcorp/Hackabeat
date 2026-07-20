@@ -13,7 +13,7 @@ const selectors = [
     'alertSettingsModal', 'alertSettingsBtn', 'closeAlertSettingsBtn', 'alertToggleBtn',
     'userProfile', 'userDisplayName', 'streakDisplay', 'logoutBtn', 'localClock',
     'themeToggle', 'flashContainer', 'alertBanner', 'reminderMinutes', 'audioUrlInput',
-    'timeAgoDisplay', 'actualTimeDisplay', 'potentialTimeDisplay', 'progressBar', 'progressText', 'sessionStartDisplay', 'infoModal', 'closeInfoBtn', 'infoOpenBtn', 'potential', 'potentialH'
+    'timeAgoDisplay', 'actualTimeDisplay', 'potentialTimeDisplay', 'progressBar', 'progressText', 'sessionStartDisplay', 'infoModal', 'closeInfoBtn', 'infoOpenBtn', 'potential', 'potentialH', 'hacking', 'global_rank', 'local_rank', 'userPfp'
 ];
 const d = {};
 selectors.forEach(s => d[s] = el(s));
@@ -41,16 +41,19 @@ async function handleOauth() {
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
     const key = params.get('key');
-    const resolvedUsername = params.get('username');
+    const usnm = params.get('username');
+    const uid = params.get('uid');
 
-    if (!accessToken || !resolvedUsername) return;
+    if (!accessToken || !usnm) return;
 
     try {
         cfg = {
-            username: resolvedUsername,
+            username: usnm,
             apiKey: accessToken,
+            uid,
             apiOpKey: key,
-            targetHours: 2.0
+            targetHours: 2.0,
+            meta: null
         };
 
         localStorage.setItem('h_cfg', JSON.stringify(cfg));
@@ -127,10 +130,37 @@ function loadCfg() {
     const saved = localStorage.getItem('h_cfg');
     if (saved) {
         cfg = JSON.parse(saved);
-        d.userDisplayName.textContent = cfg.username;
+        d.userDisplayName.textContent = cfg.meta?.name || cfg.username;
+        d.userDisplayName.href = cfg.meta?.url || "#";
         d.userProfile.classList.remove('opacity-40');
-        if (cfg.username.trim() !== "") d.setupModal.classList.add('hidden');
-        sync(['actual', 'streak', 'heartbeat', 'potential']);
+        if (cfg.username.trim() !== "") {
+            d.setupModal.classList.add('hidden');
+            sync(['actual', 'streak', 'heartbeat', 'potential']);
+            function syncHackers() {
+                fetch("https://hackatime.hackclub.com/api/v1/currently_hacking").then(r => r.json()).then(data => { d.hacking.textContent = data.count });
+            }
+            function syncLeaderboard() {
+                fetch("https://api.alimad.co/beat/leaderboard?uid=" + cfg.uid).then(r => r.json()).then(data => {
+                    d.global_rank.textContent = data.global_rank;
+                    d.local_rank.textContent = data.local_rank;
+                    cfg.meta = {
+                        name: data.name,
+                        pfp: data.pfp,
+                        url: data.link
+                    }
+                    d.userDisplayName.textContent = cfg.meta?.name || cfg.username;
+                    d.userDisplayName.href = cfg.meta?.url || "#";
+                    if (data.pfp && data.pfp.startsWith("https://")) {
+                        d.userPfp.src = data.pfp;
+                        d.userPfp.classList.toggle("hidden", false);
+                    }
+                });
+            }
+            syncHackers();
+            syncLeaderboard();
+            setTimeout(syncLeaderboard, 2 * 60 * 1000);
+            setTimeout(syncHackers, 30 * 1000);
+        }
     } else {
         d.setupModal.classList.remove('hidden');
     }
@@ -193,7 +223,8 @@ async function sync(types) {
             headers: standardHeaders,
             fn: (json) => {
                 const s = json?.streak_days || 0;
-                d.streakDisplay.textContent = `${s} day${s === 1 ? '' : 's'}`;
+                d.streakDisplay.textContent = `${s}`;
+                el("st-s").textContent = s === 1 ? '' : 's';
             }
         },
         heartbeat: {
@@ -277,11 +308,11 @@ function calc() {
             const lostSeconds = Math.max(0, totalPossibleSeconds - actualTotalSeconds);
             d.potentialTimeDisplay.textContent = fmtDur(lostSeconds);
             d.potential.title = "amount of time spent not coding since you started coding today";
-            d.potentialH.textContent = "Time lost today";
+            d.potentialH.textContent = "Time Lost";
         } else {
             d.potentialTimeDisplay.textContent = fmtDur(totalPossibleSeconds);
             d.potential.title = "amount of time you could have tracked if you had been coding continuously since you started, today. right click to change mode";
-            d.potentialH.textContent = "Time since you started coding today";
+            d.potentialH.textContent = "Since Started";
         }
     } else {
         d.potentialTimeDisplay.textContent = fmtDur(0);
