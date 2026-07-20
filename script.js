@@ -9,11 +9,12 @@ let audio = new Audio();
 
 const el = (id) => document.getElementById(id);
 const selectors = [
-    'setupModal', 'saveconfigBtn', 'setupStep1', 'setupStep2', 'dailyGoalInput', 'confirmGoalBtn',
+    'setupModal', 'saveconfigBtn',
     'alertSettingsModal', 'alertSettingsBtn', 'closeAlertSettingsBtn', 'alertToggleBtn',
     'userProfile', 'userDisplayName', 'streakDisplay', 'logoutBtn', 'localClock',
     'themeToggle', 'flashContainer', 'alertBanner', 'reminderMinutes', 'audioUrlInput',
-    'timeAgoDisplay', 'actualTimeDisplay', 'potentialTimeDisplay', 'progressBar', 'progressText', 'sessionStartDisplay', 'infoModal', 'closeInfoBtn', 'infoOpenBtn', 'potential', 'potentialH'
+    'timeAgoDisplay', 'actualTimeDisplay', 'potentialTimeDisplay', 'progressBar', 'progressText', 'sessionStartDisplay', 'infoModal', 'closeInfoBtn', 'infoOpenBtn', 'potential', 'potentialH',
+    'goalPromptModal', 'customGoalInput', 'confirmGoalBtn'
 ];
 const d = {};
 selectors.forEach(s => d[s] = el(s));
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     handleOauth();
     loadCfg();
     initAlert();
+    initGoalPrompt();
     lucide.createIcons();
 
     setInterval(updateClock, 50);
@@ -35,42 +37,71 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function handleOauth() {
-    const hash = window.location.hash.substring(1);
-    if (!hash) return;
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get('access_token');
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    if (!code) return;
 
-    if (accessToken) {
-        try {
-            const userFetch = await fetch('https://hackatime.hackclub.com/api/v1/authenticated/me', {
-                headers: { Authorization: "Bearer " + accessToken }
-            });
-            const userData = await userFetch.json();
-            const username = userData.github_username || userData.slack_id || "User";
+    try {
+        const CLIENT_ID = 'XeZSxRcmM3D5SR_437caoQUvmPFc2xkg18ce6Wk9Y7E';
+        const REDIRECT_URI = 'https://api.alimad.co/auth/hackatime/callback';
 
-            cfg.username = username;
-            cfg.apiKey = accessToken;
+        const bodyParams = new URLSearchParams();
+        bodyParams.append('grant_type', 'authorization_code');
+        bodyParams.append('code', code);
+        bodyParams.append('redirect_uri', REDIRECT_URI);
+        bodyParams.append('client_id', CLIENT_ID);
 
-            d.setupStep1.classList.add('hidden');
-            d.setupStep2.classList.remove('hidden');
-            d.setupModal.classList.remove('hidden');
+        const tokenRes = await fetch('https://hackatime.hackclub.com/oauth/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: bodyParams.toString()
+        });
 
-            d.confirmGoalBtn.onclick = () => {
-                const selectedGoal = parseFloat(d.dailyGoalInput.value) || 2.0;
-                cfg.targetHours = selectedGoal;
+        if (!tokenRes.ok) throw new Error('Token verification failed.');
+        const tokenData = await tokenRes.json();
+        const accessToken = tokenData.access_token;
 
-                localStorage.setItem('h_cfg', JSON.stringify(cfg));
-                d.setupModal.classList.add('hidden');
+        const profileRes = await fetch('https://hackatime.hackclub.com/api/v1/authenticated/me', {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        if (!profileRes.ok) throw new Error('Profile resolution failed.');
+        const profileData = await profileRes.json();
+        const resolvedUsername = profileData.github_username || profileData.id.toString();
 
-                history.replaceState(null, document.title, window.location.pathname + window.location.search);
-                d.userDisplayName.textContent = cfg.username;
-                d.userProfile.classList.remove('opacity-40');
-                sync(['actual', 'streak', 'heartbeat', 'potential']);
-            };
-        } catch (e) {
-            console.error("Authentication setup sequence failed", e);
-        }
+        window.__oauth_payload = { username: resolvedUsername, token: accessToken };
+
+        d.setupModal.classList.add('hidden');
+        d.goalPromptModal.classList.remove('hidden');
+    } catch (err) {
+        console.error('Authentication configuration cycle error:', err);
     }
+}
+
+function initGoalPrompt() {
+    document.querySelectorAll('.goal-opt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            d.customGoalInput.value = btn.dataset.hours;
+        });
+    });
+
+    d.confirmGoalBtn.addEventListener('click', () => {
+        const targetHours = parseFloat(d.customGoalInput.value) || 2.0;
+        if (window.__oauth_payload) {
+            cfg = {
+                username: window.__oauth_payload.username,
+                apiKey: window.__oauth_payload.token,
+                targetHours: targetHours
+            };
+            localStorage.setItem('h_cfg', JSON.stringify(cfg));
+            delete window.__oauth_payload;
+        } else {
+            cfg.targetHours = targetHours;
+            localStorage.setItem('h_cfg', JSON.stringify(cfg));
+        }
+        d.goalPromptModal.classList.add('hidden');
+        history.replaceState(null, document.title, window.location.pathname);
+        loadCfg();
+    });
 }
 
 function initTheme() {
@@ -137,20 +168,20 @@ function loadCfg() {
     const saved = localStorage.getItem('h_cfg');
     if (saved) {
         cfg = JSON.parse(saved);
-        if (cfg.username.trim() !== "") {
-            d.userDisplayName.textContent = cfg.username;
-            d.userProfile.classList.remove('opacity-40');
-            d.setupModal.classList.add('hidden');
-            sync(['actual', 'streak', 'heartbeat', 'potential']);
-        } else {
-            d.setupModal.classList.remove('hidden');
-        }
+        d.userDisplayName.textContent = cfg.username;
+        d.userProfile.classList.remove('opacity-40');
+        if (cfg.username.trim() !== "") d.setupModal.classList.add('hidden');
+        sync(['actual', 'streak', 'heartbeat', 'potential']);
     } else {
         d.setupModal.classList.remove('hidden');
     }
 }
 
 d.saveconfigBtn.addEventListener('click', () => {
+    if (cfg.apiKey && cfg.username) {
+        d.setupModal.classList.add('hidden');
+        return;
+    }
     const CLIENT_ID = 'XeZSxRcmM3D5SR_437caoQUvmPFc2xkg18ce6Wk9Y7E';
     const REDIRECT_URI = encodeURIComponent('https://api.alimad.co/auth/hackatime/callback');
     localStorage.setItem('h_cfg', JSON.stringify({ username: '', apiKey: '', targetHours: 2.0 }));
@@ -174,17 +205,17 @@ function updateClock() {
 }
 
 async function sync(types) {
-    if (!cfg.apiKey) return;
+    if (!cfg.apiKey || !cfg.username) return;
     const headers = { 'Authorization': `Bearer ${cfg.apiKey}` };
 
     const routes = {
         actual: {
-            url: 'https://hackatime.hackclub.com/api/v1/authenticated/hours',
+            url: `https://hackatime.hackclub.com/api/hackatime/v1/users/current/statusbar/today`,
             el: d.actualTimeDisplay,
-            fn: (json) => { actualTotalSeconds = json?.total_seconds || 0; }
+            fn: (json) => { actualTotalSeconds = json?.data?.grand_total?.total_seconds || 0; }
         },
         streak: {
-            url: 'https://hackatime.hackclub.com/api/v1/authenticated/streak',
+            url: `https://hackatime.hackclub.com/api/v1/authenticated/streak`,
             el: d.streakDisplay,
             fn: (json) => {
                 const s = json?.streak_days || 0;
@@ -298,4 +329,4 @@ function fmtDur(s) {
     const m = Math.floor((s % 3600) / 60);
     const sec = Math.floor(s % 60);
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-}
+} 
