@@ -42,18 +42,15 @@ async function handleOauth() {
 
     if (accessToken) {
         try {
-            // Use the OAuth specific route to fetch authenticated user data
             const userFetch = await fetch('https://hackatime.hackclub.com/api/v1/authenticated/me', {
                 headers: { Authorization: "Bearer " + accessToken }
             });
             const userData = await userFetch.json();
             const username = userData.github_username || userData.slack_id || "User";
 
-            // Stage variables into config temporarily
             cfg.username = username;
             cfg.apiKey = accessToken;
 
-            // Show final custom popup inside modal instead of window.prompt
             d.setupStep1.classList.add('hidden');
             d.setupStep2.classList.remove('hidden');
             d.setupModal.classList.remove('hidden');
@@ -65,7 +62,6 @@ async function handleOauth() {
                 localStorage.setItem('h_cfg', JSON.stringify(cfg));
                 d.setupModal.classList.add('hidden');
 
-                // Clear URL frag and finish booting environment
                 history.replaceState(null, document.title, window.location.pathname + window.location.search);
                 d.userDisplayName.textContent = cfg.username;
                 d.userProfile.classList.remove('opacity-40');
@@ -158,7 +154,7 @@ d.saveconfigBtn.addEventListener('click', () => {
     const CLIENT_ID = 'XeZSxRcmM3D5SR_437caoQUvmPFc2xkg18ce6Wk9Y7E';
     const REDIRECT_URI = encodeURIComponent('https://api.alimad.co/auth/hackatime/callback');
     localStorage.setItem('h_cfg', JSON.stringify({ username: '', apiKey: '', targetHours: 2.0 }));
-    window.location.href = `https://hackatime.hackclub.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=profile+read`;
+    window.location.href = `https://hackatime.hackclub.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile+read`;
 });
 
 d.logoutBtn.addEventListener('click', () => {
