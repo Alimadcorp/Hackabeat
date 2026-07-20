@@ -74,7 +74,7 @@
                     title="Current position in global leaderboard">
                     <i data-lucide="globe" class="w-3.5 h-3.5 text-zinc-400"></i>
                     <span><span class="hidden lg:inline">Global Rank: </span><strong
-                            class="text-zinc-900 dark:text-zinc-100">Loading</strong></span>
+                            class="text-zinc-900 dark:text-zinc-100" id="global_rank">Loading</strong></span>
                 </div>
             </div>
         </div>
@@ -111,7 +111,8 @@
                 <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium flex items-center gap-1">
                     Local Rank
                 </div>
-                <div class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-200 mt-1">Loading</div>
+                <div class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-200 mt-1" id="local_rank">
+                    Loading</div>
             </div>
 
             <div data-refresh="heartbeat" title="how much time ago you made your last edit"
