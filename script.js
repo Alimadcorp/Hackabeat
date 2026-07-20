@@ -16,7 +16,7 @@ const selectors = [
     'userProfile', 'userDisplayName', 'streakDisplay', 'logoutBtn', 'localClock',
     'themeToggle', 'flashContainer', 'alertBanner', 'reminderMinutes', 'audioUrlInput',
     'timeAgoDisplay', 'actualTimeDisplay', 'potentialTimeDisplay', 'progressBar', 'progressText', 'sessionStartDisplay', 'infoModal', 'closeInfoBtn', 'infoOpenBtn', 'potential', 'potentialH', 'hacking', 'global_rank', 'local_rank', 'userPfp',
-    'dismiss'
+    'dismiss', 'alertText'
 ];
 const d = {};
 selectors.forEach(s => d[s] = el(s));
