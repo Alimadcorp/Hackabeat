@@ -7,7 +7,7 @@ let alertEnabled = false;
 let timeModeLost = false;
 let audio = new Audio();
 
-const getCoding = ["Get coding vro -_-"];
+const getCoding = ["Get coding vro -_-", "BROOOO GET CODING", "Stop procrastinating", "Are you a Sabio Tang?", "Nah bro dont give up already :<"];
 
 const el = (id) => document.getElementById(id);
 const selectors = [
@@ -107,6 +107,11 @@ function initAlert() {
         preloadAudio(d.audioUrlInput.value);
         d.alertSettingsModal.classList.add('hidden');
     });
+
+    d.dismiss.addEventListener("click", () => {
+        localStorage.setItem("dismissed", true);
+        audio.pause();
+    })
 
     d.closeInfoBtn.addEventListener('click', () => d.infoModal.classList.add('hidden'));
 
@@ -282,11 +287,6 @@ async function sync(types) {
     });
 }
 
-d.dismiss.addEventListener("click", () => {
-    localStorage.setItem("dismissed", true);
-    audio.pause();
-})
-
 function calc() {
     const now = Date.now() / 1000;
 
@@ -295,9 +295,9 @@ function calc() {
         d.timeAgoDisplay.textContent = fmtAgo(diff);
 
         const limit = (parseInt(d.reminderMinutes.value) || 3) * 60;
-        if (alertEnabled && diff > limit) {
-            if (localStorage.getItem("dismissed", "false") === "true") return;
+        if (alertEnabled && diff > limit && localStorage.getItem("dismissed", "false") === "false") {
             d.alertBanner.classList.remove('hidden');
+            d.alertText.textContent = getCoding[Math.floor(Math.random() * getCoding.length)];
             d.flashContainer.classList.toggle('bg-red-500/5', Math.floor(Date.now() / 500) % 2 === 0);
             audio.play().catch(() => { });
         } else {
