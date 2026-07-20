@@ -23,8 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initAlert();
     lucide.createIcons();
 
-    setInterval(updateClock, 1000);
-    setInterval(calc, 1000);
+    setInterval(updateClock, 50);
+    setInterval(calc, 50);
     setInterval(() => sync(['heartbeat', 'actual']), 60000);
 
     document.querySelectorAll('[data-refresh]').forEach(card => {
@@ -43,7 +43,7 @@ function initTheme() {
 function initAlert() {
     alertEnabled = localStorage.getItem('alert_on') === 'true';
     d.reminderMinutes.value = localStorage.getItem('alert_mins') || '3';
-    d.audioUrlInput.value = localStorage.getItem('alert_audio') || 'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg';
+    d.audioUrlInput.value = localStorage.getItem('alert_audio') || 'https://myinstants.com/media/sounds/epic.mp3';
 
     preloadAudio(d.audioUrlInput.value);
     updateToggleUI();
@@ -78,7 +78,7 @@ function preloadAudio(url) {
 }
 
 function updateToggleUI() {
-    d.alertToggleBtn.textContent = alertEnabled ? 'ENGAGED' : 'DISABLED';
+    d.alertToggleBtn.textContent = alertEnabled ? 'Enabled' : 'Disabled';
     d.alertToggleBtn.className = `font-mono text-xs px-4 py-2 rounded font-bold tracking-widest transition-colors ${alertEnabled ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-500'
         }`;
 }
@@ -87,12 +87,13 @@ function loadCfg() {
     const saved = localStorage.getItem('h_cfg');
     if (saved) {
         cfg = JSON.parse(saved);
-        d.userDisplayName.textContent = cfg.username;
+        d.userDisplayName.textContent = d.usernameInput.value = cfg.username;
+        d.apiKeyInput.value = cfg.apiKey;
+        d.targetInput.value = cfg.targetHours;
         d.userProfile.classList.remove('opacity-40');
         sync(['actual', 'streak', 'heartbeat', 'potential']);
-    } else {
-        d.setupModal.classList.remove('hidden');
     }
+    if (localStorage.getItem("alert_on") == "true") d.setupModal.classList.remove('hidden');
 }
 
 d.saveconfigBtn.addEventListener('click', () => {
@@ -176,9 +177,8 @@ async function sync(types) {
         if (!r || locks[t]) return;
 
         locks[t] = true;
-        // Turn fully brilliant text on fetch event ignition
-        r.el.classList.remove('opacity-30');
-        r.el.classList.add('opacity-100');
+        r.el.classList.add('opacity-30');
+        r.el.classList.remove('opacity-100');
 
         try {
             const res = await fetch(r.url, { headers });
@@ -186,9 +186,8 @@ async function sync(types) {
         } catch (e) {
             console.error(e);
         } finally {
-            // Drop explicitly back down to the faint base target resting state (opacity-30)
-            r.el.classList.remove('opacity-100');
-            r.el.classList.add('opacity-30');
+            r.el.classList.add('opacity-100');
+            r.el.classList.remove('opacity-30');
             setTimeout(() => locks[t] = false, 1000);
         }
     });

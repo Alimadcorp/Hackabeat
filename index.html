@@ -33,17 +33,21 @@
 
     <header class="w-full flex flex-wrap justify-between items-center pb-6 gap-4">
         <div id="userProfile" class="opacity-40 transition-opacity duration-300 flex items-center gap-3">
-            <span id="userDisplayName" class="font-bold text-sm"></span>
+            <span id="userDisplayName" title="Dats me!" class="font-bold text-sm"></span>
             <button id="logoutBtn"
-                class="bg-white text-black text-xs px-3 py-1 rounded hover:bg-zinc-200 transition-colors">Log
+                class="bg-white text-black text-xs px-3 py-1 rounded hover:bg-zinc-200 transition-colors"
+                title="already leaving? :'(">Log
                 out</button>
         </div>
-        <div class="flex items-center gap-6">
-            <span id="localClock" class="text-sm text-zinc-500"></span>
-            <button id="alertSettingsBtn" class="bg-white text-black p-2 rounded hover:bg-zinc-200 transition-colors">
+        <div class="flex items-center gap-3">
+            <span id="localClock" title="stop hovering over elements and checking their title and get coding >:("
+                class="text-sm text-zinc-500"></span>
+            <button id="alertSettingsBtn" title="settings :3"
+                class="dark:bg-black p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
                 <i data-lucide="settings" class="w-4 h-4"></i>
             </button>
-            <button id="themeToggle" class="bg-white text-black p-2 rounded hover:bg-zinc-200 transition-colors">
+            <button title="if the background is already dark, do not press for your own better" id="themeToggle"
+                class="dark:bg-black p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors">
                 <i data-lucide="sun" class="w-4 h-4 dark:hidden"></i>
                 <i data-lucide="moon" class="hidden dark:block w-4 h-4"></i>
             </button>
@@ -55,17 +59,18 @@
     </div>
     <main class="w-full flex-grow flex flex-col justify-center my-auto space-y-8 sm:space-y-16">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end w-full">
-            <div data-refresh="streak"
-                class="bg-theme-light dark:bg-theme-dark p-2 cursor-pointer active:scale-[0.99] transition-all">
-                <div class="text-[10px] sm:text-xs text-zinc-500 uppercase mb-2">Streak</div>
+            <div data-refresh="streak" title="amount of contiguous days you've been coding"
+                class="p-2 cursor-pointer transition-all">
+                <div class="text-sm sm:text-xs text-zinc-500">Streak</div>
                 <div id="streakDisplay"
                     class="text-4xl sm:text-[4vw] opacity-30 transition-opacity duration-150 leading-none">
                     0 days</div>
             </div>
 
-            <div data-refresh="heartbeat"
-                class="bg-theme-light dark:bg-theme-dark p-2 cursor-pointer active:scale-[0.99] transition-all sm:text-right">
-                <div class="text-[10px] sm:text-xs text-zinc-500 uppercase mb-2">Time Since
+            <div data-refresh="heartbeat" title="how much time ago you made your last edit"
+                class="p-2 cursor-pointer transition-all sm:text-right">
+                <div class="text-sm sm:text-xs text-zinc-500">Time
+                    Since
                     Last Heartbeat</div>
                 <div id="timeAgoDisplay"
                     class="text-4xl sm:text-[4vw] opacity-30 transition-opacity duration-150 leading-none">
@@ -73,8 +78,9 @@
             </div>
         </div>
         <div data-refresh="actual"
-            class="w-full bg-theme-light dark:bg-theme-dark p-4 sm:py-20 rounded-xl cursor-pointer active:scale-[0.995] transition-all text-center">
-            <div class="text-xs sm:text-sm text-zinc-400 uppercase mb-6">
+            title="official amount of time that was tracked today, you'll also see it on ur hackatime dashboard"
+            class="w-full p-4 sm:py-20 rounded-xl cursor-pointer transition-all text-center">
+            <div class="text-xs sm:text-sm text-zinc-400">
                 Time Tracked Today
             </div>
             <div id="actualTimeDisplay"
@@ -85,84 +91,85 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start w-full">
             <div data-refresh="potential"
-                class="bg-theme-light dark:bg-theme-dark p-2 cursor-pointer active:scale-[0.99] transition-all">
-                <div class="text-[10px] sm:text-xs text-zinc-500 uppercase mb-2">Time That
-                    Could've Been Tracked</div>
+                title="amount of time you could have tracked if you had been coding continuously since you started, today"
+                class="p-2 cursor-pointer transition-all">
+                <div class="text-sm sm:text-xs text-zinc-500">Time since you started coding today</div>
                 <div id="potentialTimeDisplay"
                     class="text-4xl sm:text-[4vw] opacity-30 transition-opacity duration-150 leading-none">
                     00:00:00</div>
             </div>
-
-            <div class="bg-theme-light dark:bg-theme-dark p-2 sm:text-right">
-                <div class="text-[10px] sm:text-xs text-zinc-500 uppercase mb-2">Today's
-                    Sequence Anchor</div>
-                <div id="sessionStartDisplay" class="text-4xl sm:text-[4vw] opacity-30 leading-none">--:--:--
+            <div class="p-2 sm:text-right" title="time when your first heartbeat was recorded today">
+                <div class="text-sm sm:text-xs text-zinc-500">Started coding at</div>
+                <div id="sessionStartDisplay" class="text-4xl sm:text-[4vw] leading-none">--:--:--
                 </div>
             </div>
         </div>
-
     </main>
 
-    <!-- Anchored Base Deck: Daily Targets Layout -->
-    <footer class="w-full pt-6 mt-auto space-y-3 pb-4">
+    <footer class="w-full pt-6 mt-auto space-y-3 pb-4" title="today's progress based on your set daily goal">
         <div class="flex justify-between items-center text-xs text-zinc-500">
-            <span class="uppercase">Daily Execution Bar</span>
+            <span>Today's progress</span>
             <span id="progressText">0.0%</span>
         </div>
-        <div class="h-3 w-full bg-zinc-200 dark:bg-zinc-950 overflow-hidden">
+        <div class="h-2 w-full bg-zinc-200 dark:bg-zinc-950 overflow-hidden rounded-full">
             <div id="progressBar" class="h-full bg-zinc-900 dark:bg-zinc-100 w-0 transition-all duration-300"></div>
         </div>
     </footer>
 
-    <!-- Init Setup Modal Interface -->
     <div id="setupModal"
         class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
         <div
-            class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg space-y-6">
-            <h2 class="text-xs uppercase text-zinc-400">Initialize Connection Engine</h2>
-            <input id="usernameInput" type="text" placeholder="Username"
-                class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
-            <input id="apiKeyInput" type="password" placeholder="API Key"
-                class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
+            class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg">
+            <h2 class="text-lg text-zinc-400">Setup Hackabeat</h2>
+            <input id="usernameInput" name="username" type="text" placeholder="Hackatime Username"
+                class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 mt-4 text-sm rounded focus:outline-none focus:border-zinc-500">
+            <a href="https://hackatime.hackclub.com/my/settings#user_username"
+                class="text-gray-400 text-sm ml-1 hover:underline">Get
+                it here</a>
+            <input id="apiKeyInput" name="password" type="password" placeholder="Hackatime API Key"
+                class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 mt-4 text-sm rounded focus:outline-none focus:border-zinc-500">
+            <a href="https://hackatime.hackclub.com/my/settings/setup#user_config_file"
+                class="text-gray-400 text-sm ml-1 hover:underline">Get
+                it here</a>
             <input id="targetInput" type="text" placeholder="Daily Target Hours (e.g. 6)"
-                class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
+                class="w-full mt-4 bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
             <button id="saveconfigBtn"
-                class="w-full bg-white text-black font-bold text-sm p-3 rounded hover:bg-zinc-200 transition-colors">AUTHORIZE
-                PORT</button>
+                class="w-full mt-4 bg-white text-black font-bold text-sm p-3 rounded hover:bg-zinc-200 transition-colors">Continue</button>
         </div>
     </div>
 
-    <!-- Settings System Modal Interface -->
     <div id="alertSettingsModal"
         class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
         <div
-            class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg space-y-6">
-            <h2 class="text-xs uppercase text-zinc-400">System Monitoring Parameters</h2>
+            class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg space-y-2">
+            <h2 class="text-lg text-zinc-400" title="Yes, settings">Settings</h2>
 
-            <div class="flex items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded">
-                <span class="text-xs uppercase text-zinc-400">Signal Watcher</span>
+            <div class="flex items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded"
+                title="Idle warnings are audio warnings that go off when you stop coding for more than a certain amount of minutes">
+                <span class="text-md text-zinc-400">Idle warnings</span>
                 <button id="alertToggleBtn"
-                    class="bg-white text-black text-xs px-4 py-2 rounded font-bold transition-colors">DISABLED</button>
+                    class="bg-white text-black px-4 py-2 rounded transition-colors">Disabled</button>
             </div>
-
+            <span class="text-sm mt-3 text-zinc-400">Idle warnings are audio warnings that go off when you stop coding
+                for
+                more than a certain amount of minutes</span>
+            <div></div>
             <div class="space-y-2">
-                <label class="text-[10px] uppercase text-zinc-500">Idle Trigger Barrier
+                <label class="text-sm text-zinc-500">Limit
                     (Minutes)</label>
                 <input id="reminderMinutes" type="text" value="3"
                     class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
             </div>
-
             <div class="space-y-2">
-                <label class="text-[10px] uppercase text-zinc-500">Audio Warning
-                    Source</label>
+                <label class="text-sm text-zinc-500">Sound</label>
                 <input id="audioUrlInput" type="text"
                     value="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"
                     class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
             </div>
 
             <button id="closeAlertSettingsBtn"
-                class="w-full bg-white text-black font-bold text-sm p-3 rounded hover:bg-zinc-200 transition-colors">COMMIT
-                VARIABLES</button>
+                class="w-full bg-white text-black font-bold text-sm p-3 rounded hover:bg-zinc-200 transition-colors">Save
+                & exit</button>
         </div>
     </div>
 
