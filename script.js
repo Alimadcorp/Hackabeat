@@ -92,8 +92,10 @@ function loadCfg() {
         d.targetInput.value = cfg.targetHours;
         d.userProfile.classList.remove('opacity-40');
         sync(['actual', 'streak', 'heartbeat', 'potential']);
+        if (localStorage.getItem("alert_on") === "true") d.setupModal.classList.remove('hidden');
+    } else {
+        d.setupModal.classList.remove('hidden');
     }
-    if (localStorage.getItem("alert_on") == "true") d.setupModal.classList.remove('hidden');
 }
 
 d.saveconfigBtn.addEventListener('click', () => {
