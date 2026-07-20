@@ -40,6 +40,7 @@ async function handleOauth() {
 
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
+    const key = params.get('key');
     const resolvedUsername = params.get('username');
 
     if (!accessToken || !resolvedUsername) return;
@@ -48,6 +49,7 @@ async function handleOauth() {
         cfg = {
             username: resolvedUsername,
             apiKey: accessToken,
+            apiOpKey: key,
             targetHours: 2.0
         };
 
@@ -163,14 +165,17 @@ function updateClock() {
 
 async function sync(types) {
     if (!cfg.apiKey || !cfg.username) return;
-    const headers = { 'Authorization': `Bearer ${cfg.apiKey}` };
+    const standardHeaders = { 'Authorization': `Bearer ${cfg.apiKey}` };
+    const operationalHeaders = cfg.apiOpKey ? { 'Authorization': `Bearer ${cfg.apiOpKey}` } : standardHeaders;
 
     const routes = {
         actual: {
             url: `https://hackatime.hackclub.com/api/hackatime/v1/users/current/statusbar/today`,
             el: d.actualTimeDisplay,
+            headers: operationalHeaders,
             fn: (json) => {
                 actualTotalSeconds = json?.data?.grand_total?.total_seconds || 0;
+
                 const textStr = json?.data?.grand_total?.text || "";
                 const match = textStr.match(/(\d+(?:\.\d+)?)\s*h\s+goal/i);
                 if (match && match[1]) {
@@ -185,6 +190,7 @@ async function sync(types) {
         streak: {
             url: `https://hackatime.hackclub.com/api/v1/authenticated/streak`,
             el: d.streakDisplay,
+            headers: standardHeaders,
             fn: (json) => {
                 const s = json?.streak_days || 0;
                 d.streakDisplay.textContent = `${s} day${s === 1 ? '' : 's'}`;
@@ -193,6 +199,7 @@ async function sync(types) {
         heartbeat: {
             url: 'https://hackatime.hackclub.com/api/v1/authenticated/heartbeats/latest',
             el: d.timeAgoDisplay,
+            headers: standardHeaders,
             fn: (json) => {
                 if (json?.heartbeat) {
                     const incoming = json.heartbeat.time;
@@ -208,6 +215,7 @@ async function sync(types) {
         potential: {
             url: 'https://hackatime.hackclub.com/api/v1/my/heartbeats',
             el: d.potentialTimeDisplay,
+            headers: operationalHeaders,
             fn: (json) => {
                 if (json.heartbeats?.length > 0) {
                     startTimestamp = json.heartbeats[0].time;
@@ -223,17 +231,17 @@ async function sync(types) {
         if (!r || locks[t]) return;
 
         locks[t] = true;
-        r.el.classList.remove('opacity-30');
-        r.el.classList.add('opacity-100');
+        r.el.classList.add('opacity-30');
+        r.el.classList.remove('opacity-100');
 
         try {
-            const res = await fetch(r.url, { headers });
+            const res = await fetch(r.url, { headers: r.headers });
             if (res.ok) r.fn(await res.json());
         } catch (e) {
             console.error(e);
         } finally {
-            r.el.classList.remove('opacity-100');
-            r.el.classList.add('opacity-30');
+            r.el.classList.add('opacity-100');
+            r.el.classList.remove('opacity-30');
             setTimeout(() => locks[t] = false, 1000);
         }
     });
