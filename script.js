@@ -141,8 +141,8 @@ function loadCfg() {
             }
             function syncLeaderboard() {
                 fetch("https://api.alimad.co/beat/leaderboard?uid=" + cfg.uid).then(r => r.json()).then(data => {
-                    d.global_rank.textContent = data.global_rank;
-                    d.local_rank.textContent = data.local_rank;
+                    d.global_rank.textContent = "#" + data.global_rank;
+                    d.local_rank.textContent = "#" + data.local_rank;
                     cfg.meta = {
                         name: data.name,
                         pfp: data.pfp,
