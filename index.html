@@ -126,25 +126,22 @@
         </div>
     </footer>
 
-    <div id="setupModal"
-        class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
+    <div id="setupModal" class="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
         <div
             class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg">
-            <h2 class="text-lg text-zinc-400">Setup Hackabeat</h2>
-            <input id="usernameInput" name="username" type="text" placeholder="Hackatime Username"
-                class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 mt-4 text-sm rounded focus:outline-none focus:border-zinc-500">
-            <a href="https://hackatime.hackclub.com/my/settings#user_username"
-                class="text-gray-400 text-sm ml-1 hover:underline">Get
-                it here</a>
-            <input id="apiKeyInput" name="password" type="password" placeholder="Hackatime API Key"
-                class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 mt-4 text-sm rounded focus:outline-none focus:border-zinc-500">
-            <a href="https://hackatime.hackclub.com/my/settings/setup#user_config_file"
-                class="text-gray-400 text-sm ml-1 hover:underline">Get
-                it here</a>
-            <input id="targetInput" type="text" placeholder="Daily Target Hours (e.g. 6)"
-                class="w-full mt-4 bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
+            <h2 class="text-2xl text-zinc-400">Setup Hackabeat</h2>
+
+            <p class="text-md my-3">
+                Hackabeat is an app to boost your Hackatime activity! It tells u how much time u have been coding since
+                u started, and how much youve been procrastinating in between. Also reminds you to get coding whenever
+                you're inactive for more than a few minutes :3
+            </p>
+            <p>Authenticate with Hackatime to get started!</p>
+
             <button id="saveconfigBtn"
-                class="w-full mt-4 bg-white text-black font-bold text-sm p-3 rounded hover:bg-zinc-200 transition-colors">Continue</button>
+                class="w-full mt-6 bg-cyan-400 text-black font-bold text-lg p-3 rounded hover:bg-cyan-300 transition-colors">
+                Connect Hackatime
+            </button>
         </div>
     </div>
 

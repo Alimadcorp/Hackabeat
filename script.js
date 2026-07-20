@@ -4,12 +4,12 @@ let startTimestamp = null, actualTotalSeconds = 0, lastHeartbeatTime = null;
 const locks = { actual: false, streak: false, heartbeat: false, potential: false };
 let lastHr = new Date().getHours();
 let alertEnabled = false;
-let timeModeLost = false; // if this is true, show the time lost since u started coding today
+let timeModeLost = false;
 let audio = new Audio();
 
 const el = (id) => document.getElementById(id);
 const selectors = [
-    'setupModal', 'usernameInput', 'apiKeyInput', 'targetInput', 'saveconfigBtn',
+    'setupModal', 'saveconfigBtn',
     'alertSettingsModal', 'alertSettingsBtn', 'closeAlertSettingsBtn', 'alertToggleBtn',
     'userProfile', 'userDisplayName', 'streakDisplay', 'logoutBtn', 'localClock',
     'themeToggle', 'flashContainer', 'alertBanner', 'reminderMinutes', 'audioUrlInput',
@@ -20,6 +20,7 @@ selectors.forEach(s => d[s] = el(s));
 
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
+    handleOauth();
     loadCfg();
     initAlert();
     lucide.createIcons();
@@ -32,6 +33,31 @@ document.addEventListener('DOMContentLoaded', () => {
         card.addEventListener('click', () => sync([card.dataset.refresh]));
     });
 });
+
+async function handleOauth() {
+    const hash = window.location.hash.substring(1);
+    if (!hash) return; // ruh
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get('access_token');
+    const username = params.get('username');
+
+    if (accessToken && username) {
+        const saved = localStorage.getItem('h_cfg');
+        const existing = saved ? JSON.parse(saved) : {};
+
+        const f = await fetch(`https://hackatime.hackclub.com/api/hackatime/v1/users/${username}/statusbar/today`, { headers: { Authorization: "Bearer " + accessToken } });
+        const r = await f.json();
+
+        cfg = {
+            username: username,
+            apiKey: accessToken,
+            targetHours: r.data.goal?.target_seconds / 3600 || existing.targetHours || 2.0
+        };
+
+        localStorage.setItem('h_cfg', JSON.stringify(cfg));
+        history.replaceState(null, document.title, window.location.pathname + window.location.search);
+    }
+}
 
 function initTheme() {
     if (localStorage.getItem('theme') === 'light') document.documentElement.classList.remove('dark');
@@ -72,9 +98,7 @@ function initAlert() {
         d.alertSettingsModal.classList.add('hidden');
     });
 
-    d.closeInfoBtn.addEventListener('click', () => {
-        d.infoModal.classList.add('hidden');
-    });
+    d.closeInfoBtn.addEventListener('click', () => d.infoModal.classList.add('hidden'));
 
     d.potential.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -92,37 +116,33 @@ function preloadAudio(url) {
 
 function updateToggleUI() {
     d.alertToggleBtn.textContent = alertEnabled ? 'Enabled' : 'Disabled';
-    d.alertToggleBtn.className = `font-mono text-xs px-4 py-2 rounded font-bold tracking-widest transition-colors ${alertEnabled ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-500'
-        }`;
+    d.alertToggleBtn.className = `font-mono text-xs px-4 py-2 rounded font-bold tracking-widest transition-colors ${alertEnabled ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-500'}`;
 }
 
 function loadCfg() {
     const saved = localStorage.getItem('h_cfg');
     if (saved) {
         cfg = JSON.parse(saved);
-        d.userDisplayName.textContent = d.usernameInput.value = cfg.username;
-        d.apiKeyInput.value = cfg.apiKey;
-        d.targetInput.value = cfg.targetHours;
+        d.userDisplayName.textContent = cfg.username;
         d.userProfile.classList.remove('opacity-40');
+        if (cfg.username.trim() !== "") d.setupModal.classList.add('hidden');
         sync(['actual', 'streak', 'heartbeat', 'potential']);
-        if (localStorage.getItem("alert_on") === "true") d.setupModal.classList.remove('hidden');
     } else {
         d.setupModal.classList.remove('hidden');
     }
 }
 
 d.saveconfigBtn.addEventListener('click', () => {
-    const u = d.usernameInput.value.trim();
-    const k = d.apiKeyInput.value.trim();
-    const t = parseFloat(d.targetInput.value) || 2.0;
-    if (!u || !k) return alert('Configuration payload empty.');
-
-    cfg = { username: u, apiKey: k, targetHours: t };
-    localStorage.setItem('h_cfg', JSON.stringify(cfg));
-    d.setupModal.classList.add('hidden');
-    d.userDisplayName.textContent = u;
-    d.userProfile.classList.remove('opacity-40');
-    sync(['actual', 'streak', 'heartbeat', 'potential']);
+    if (cfg.apiKey && cfg.username) {
+        cfg.targetHours = 2.0;
+        localStorage.setItem('h_cfg', JSON.stringify(cfg));
+        d.setupModal.classList.add('hidden');
+        return;
+    }
+    const CLIENT_ID = 'XeZSxRcmM3D5SR_437caoQUvmPFc2xkg18ce6Wk9Y7E';
+    const REDIRECT_URI = encodeURIComponent('https://api.alimad.co/auth/hackatime/callback');
+    localStorage.setItem('h_cfg', JSON.stringify({ username: '', apiKey: '', targetHours: 2.0 }));
+    window.location.href = `https://hackatime.hackclub.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile+read`;
 });
 
 d.logoutBtn.addEventListener('click', () => {
@@ -192,8 +212,8 @@ async function sync(types) {
         if (!r || locks[t]) return;
 
         locks[t] = true;
-        r.el.classList.add('opacity-30');
-        r.el.classList.remove('opacity-100');
+        r.el.classList.remove('opacity-30');
+        r.el.classList.add('opacity-100');
 
         try {
             const res = await fetch(r.url, { headers });
@@ -201,8 +221,8 @@ async function sync(types) {
         } catch (e) {
             console.error(e);
         } finally {
-            r.el.classList.add('opacity-100');
-            r.el.classList.remove('opacity-30');
+            r.el.classList.remove('opacity-100');
+            r.el.classList.add('opacity-30');
             setTimeout(() => locks[t] = false, 1000);
         }
     });
