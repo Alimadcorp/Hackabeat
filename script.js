@@ -373,7 +373,7 @@ function calc() {
     }
 
     const target = cfg.targetHours * 3600;
-    const pct = target > 0 ? Math.min(500, (actualTotalSeconds / target) * 100) : 0;
+    const pct = target > 0 ? Math.min(99999999, (actualTotalSeconds / target) * 100) : 0;
     d.progressBar.style.width = `${Math.min(100, pct)}%`;
     d.progressText.textContent = `${pct.toFixed(1)}% (${fmtDur(actualTotalSeconds)} / ${cfg.targetHours}h Target)`;
 }
