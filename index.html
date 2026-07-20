@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hackabeat</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        theme: { dark: '#000000', light: '#ffffff' },
+                    },
+                    fontFamily: {
+                        sans: ["Ubuntu", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body
+    class="bg-theme-light dark:bg-theme-dark text-zinc-900 dark:text-zinc-100 min-h-screen transition-colors duration-200 font-sans flex flex-col justify-between overflow-x-hidden p-6 sm:p-12">
+    <div id="flashContainer" class="fixed inset-0 pointer-events-none transition-colors duration-200 z-40"></div>
+
+    <header class="w-full flex flex-wrap justify-between items-center pb-6 gap-4">
+        <div id="userProfile" class="opacity-40 transition-opacity duration-300 flex items-center gap-3">
+            <span id="userDisplayName" class="font-bold text-sm"></span>
+            <button id="logoutBtn"
+                class="bg-white text-black text-xs px-3 py-1 rounded hover:bg-zinc-200 transition-colors">Log
+                out</button>
+        </div>
+        <div class="flex items-center gap-6">
+            <span id="localClock" class="text-sm text-zinc-500"></span>
+            <button id="alertSettingsBtn" class="bg-white text-black p-2 rounded hover:bg-zinc-200 transition-colors">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+            </button>
+            <button id="themeToggle" class="bg-white text-black p-2 rounded hover:bg-zinc-200 transition-colors">
+                <i data-lucide="sun" class="w-4 h-4 dark:hidden"></i>
+                <i data-lucide="moon" class="hidden dark:block w-4 h-4"></i>
+            </button>
+        </div>
+    </header>
+
+    <div id="alertBanner" class="hidden w-full bg-red-950/20 text-red-500 p-4 text-center text-sm my-4 rounded">
+        Get coding bro -_-
+    </div>
+    <main class="w-full flex-grow flex flex-col justify-center my-auto space-y-8 sm:space-y-16">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end w-full">
+            <div data-refresh="streak"
+                class="bg-theme-light dark:bg-theme-dark p-2 cursor-pointer active:scale-[0.99] transition-all">
+                <div class="text-[10px] sm:text-xs text-zinc-500 uppercase mb-2">Streak</div>
+                <div id="streakDisplay"
+                    class="text-4xl sm:text-[4vw] opacity-30 transition-opacity duration-150 leading-none">
+                    0 days</div>
+            </div>
+
+            <div data-refresh="heartbeat"
+                class="bg-theme-light dark:bg-theme-dark p-2 cursor-pointer active:scale-[0.99] transition-all sm:text-right">
+                <div class="text-[10px] sm:text-xs text-zinc-500 uppercase mb-2">Time Since
+                    Last Heartbeat</div>
+                <div id="timeAgoDisplay"
+                    class="text-4xl sm:text-[4vw] opacity-30 transition-opacity duration-150 leading-none">
+                    uhhh</div>
+            </div>
+        </div>
+        <div data-refresh="actual"
+            class="w-full bg-theme-light dark:bg-theme-dark p-4 sm:py-20 rounded-xl cursor-pointer active:scale-[0.995] transition-all text-center">
+            <div class="text-xs sm:text-sm text-zinc-400 uppercase mb-6">
+                Time Tracked Today
+            </div>
+            <div id="actualTimeDisplay"
+                class="text-5xl sm:text-[11vw] font-black opacity-30 transition-opacity duration-150 leading-none select-none">
+                00:00:00
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start w-full">
+            <div data-refresh="potential"
+                class="bg-theme-light dark:bg-theme-dark p-2 cursor-pointer active:scale-[0.99] transition-all">
+                <div class="text-[10px] sm:text-xs text-zinc-500 uppercase mb-2">Time That
+                    Could've Been Tracked</div>
+                <div id="potentialTimeDisplay"
+                    class="text-4xl sm:text-[4vw] opacity-30 transition-opacity duration-150 leading-none">
+                    00:00:00</div>
+            </div>
+
+            <div class="bg-theme-light dark:bg-theme-dark p-2 sm:text-right">
+                <div class="text-[10px] sm:text-xs text-zinc-500 uppercase mb-2">Today's
+                    Sequence Anchor</div>
+                <div id="sessionStartDisplay" class="text-4xl sm:text-[4vw] opacity-30 leading-none">--:--:--
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Anchored Base Deck: Daily Targets Layout -->
+    <footer class="w-full pt-6 mt-auto space-y-3 pb-4">
+        <div class="flex justify-between items-center text-xs text-zinc-500">
+            <span class="uppercase">Daily Execution Bar</span>
+            <span id="progressText">0.0%</span>
+        </div>
+        <div class="h-3 w-full bg-zinc-200 dark:bg-zinc-950 overflow-hidden">
+            <div id="progressBar" class="h-full bg-zinc-900 dark:bg-zinc-100 w-0 transition-all duration-300"></div>
+        </div>
+    </footer>
+
+    <!-- Init Setup Modal Interface -->
+    <div id="setupModal"
+        class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div
+            class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg space-y-6">
+            <h2 class="text-xs uppercase text-zinc-400">Initialize Connection Engine</h2>
+            <input id="usernameInput" type="text" placeholder="Username"
+                class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
+            <input id="apiKeyInput" type="password" placeholder="API Key"
+                class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
+            <input id="targetInput" type="text" placeholder="Daily Target Hours (e.g. 6)"
+                class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
+            <button id="saveconfigBtn"
+                class="w-full bg-white text-black font-bold text-sm p-3 rounded hover:bg-zinc-200 transition-colors">AUTHORIZE
+                PORT</button>
+        </div>
+    </div>
+
+    <!-- Settings System Modal Interface -->
+    <div id="alertSettingsModal"
+        class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div
+            class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg space-y-6">
+            <h2 class="text-xs uppercase text-zinc-400">System Monitoring Parameters</h2>
+
+            <div class="flex items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded">
+                <span class="text-xs uppercase text-zinc-400">Signal Watcher</span>
+                <button id="alertToggleBtn"
+                    class="bg-white text-black text-xs px-4 py-2 rounded font-bold transition-colors">DISABLED</button>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase text-zinc-500">Idle Trigger Barrier
+                    (Minutes)</label>
+                <input id="reminderMinutes" type="text" value="3"
+                    class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase text-zinc-500">Audio Warning
+                    Source</label>
+                <input id="audioUrlInput" type="text"
+                    value="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"
+                    class="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 p-3 text-sm rounded focus:outline-none focus:border-zinc-500">
+            </div>
+
+            <button id="closeAlertSettingsBtn"
+                class="w-full bg-white text-black font-bold text-sm p-3 rounded hover:bg-zinc-200 transition-colors">COMMIT
+                VARIABLES</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
