@@ -192,10 +192,9 @@ async function sync(types) {
             fn: (json) => {
                 actualTotalSeconds = json?.data?.grand_total?.total_seconds || 0;
 
-                const textStr = json?.data?.grand_total?.text || "";
-                const match = textStr.match(/(\d+(?:\.\d+)?)\s*h\s+goal/i);
+                const gol = (json?.data?.goal?.target_seconds || 7200) / 3600;
                 if (match && match[1]) {
-                    cfg.targetHours = parseFloat(match[1]);
+                    cfg.targetHours = match[1];
                     localStorage.setItem('h_cfg', JSON.stringify(cfg));
                 }
             }
