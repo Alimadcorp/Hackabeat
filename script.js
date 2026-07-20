@@ -232,7 +232,7 @@ d.logoutBtn.addEventListener('click', () => {
 
 function updateClock() {
     const now = new Date();
-    d.localClock.textContent = now.toLocaleTimeString();
+    d.localClock.textContent = now.toLocaleTimeString([], { hour12: false });
     const curHr = now.getHours();
     if (curHr === 0 && lastHr !== 0) {
         startTimestamp = null;
@@ -300,7 +300,7 @@ async function sync(types) {
                 if (json.heartbeats?.length > 0) {
                     startTimestamp = json.heartbeats[0].time;
                     const dateObj = new Date(startTimestamp * 1000);
-                    d.sessionStartDisplay.textContent = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    d.sessionStartDisplay.textContent = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
                 }
             }
         }
