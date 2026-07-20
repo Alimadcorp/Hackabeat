@@ -4,9 +4,11 @@ Never miss a hackatime beat, app for hackclubbers; know exactly when you started
 
 ## How it works
 
-`index.html` and `style.css` exist
+To question how this works, we need to question how Hackatime works
 
-`script.js` does a bunch of silly things
+Hackatime tracks time using heartbeats. Whenever you write some code, it uploads a heartbeat. If the time interval between two heartbeats is less than 5 minutes, Hackatime counts it as time spent coding. This app alerts the user if they spend more than 3 minutes idle, so that they can track more time.
+
+(As far as I know, this is not against Hackatime policy, but if I'm wrong, please correct me)
 
 ## Deployment
 
