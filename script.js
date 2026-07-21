@@ -249,6 +249,10 @@ async function fillHourly() {
 
             const startSec = start.getTime() / 1000;
 
+            missingKeys.forEach(key => {
+                bucke[key] = 0;
+            });
+
             for (let i = 1; i < beats.length; i++) {
                 const prev = beats[i - 1].time;
                 const curr = beats[i].time;
@@ -267,6 +271,7 @@ async function fillHourly() {
                 }
             }
 
+            // Save completed full static hours to cache
             hourSlots.forEach(iso => {
                 if (iso !== currentHourIso && iso !== oldestHourIso) {
                     cache[iso] = bucke[iso];
@@ -509,7 +514,6 @@ async function sync(types) {
 
 function calc() {
     const now = Date.now() / 1000;
-
     if (lastHeartbeatTime) {
         const diff = Math.max(0, now - lastHeartbeatTime);
         d.timeAgoDisplay.textContent = fmtAgo(diff);
