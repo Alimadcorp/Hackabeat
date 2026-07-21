@@ -26,7 +26,10 @@
                     },
                     fontFamily: {
                         sans: ["Ubuntu", "sans-serif"]
-                    }
+                    },
+                    screens: {
+                        'xs': '364px',
+                    },
                 }
             }
         }
@@ -41,13 +44,14 @@
     <header
         class="w-full flex flex-row justify-between items-center border-b border-zinc-200 dark:border-zinc-900 pb-4 gap-2 flex-shrink-0">
         <div class="flex items-center gap-2">
-            <img id="userPfp" src="" title="Looks like your pfp -_-"
-                class="hidden w-7 h-7 rounded-full object-cover border border-zinc-200 dark:border-zinc-800" />
+            <div class="p-0 m-0 hidden xs:block"><img id="userPfp" src="" title="Looks like your pfp -_-"
+                    class="hidden w-7 h-7 rounded-full object-cover border border-zinc-200 dark:border-zinc-800" />
+            </div>
             <div id="userProfile" class="opacity-40 transition-opacity duration-300 flex items-center gap-2">
                 <a href="#" target="_blank" id="userDisplayName" title="Dats me!"
-                    class="hover:underline font-bold text-sm"></a>
+                    class="hover:underline font-bold text-md"></a>
                 <div data-refresh="streak"
-                    class="flex items-center text-orange-500 cursor-pointer font-bold text-sm bg-orange-500/10 px-2 py-1 h-7 rounded gap-2"
+                    class="items-center hidden xs:flex text-orange-500 cursor-pointer font-bold text-sm bg-orange-500/10 px-2 py-1 h-7 rounded gap-2"
                     title="Your current coding streak!">
                     <i data-lucide="flame" class="w-4 h-4 fill-orange-500"></i>
                     <span><span id="streakDisplay">0</span><span class="hidden lg:inline"> day<span
@@ -81,9 +85,9 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-1">
+        <div class="flex items-center xs:gap-1">
             <span id="localClock" title="stop hovering over elements and checking their title and get coding >:("
-                class="text-xs mr-2 text-zinc-500"></span>
+                class="text-xs hidden xs:inline mr-2 text-zinc-500"></span>
             <a href="https://live.alimad.co/stats/view?app=beat.alimad.co"
                 class="hidden sm:flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 <div class="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1 rounded"
@@ -97,7 +101,7 @@
                 </div>
             </a>
             <button id="infoOpenBtn" title="view info :>"
-                class="dark:bg-transparent p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-900 transition-colors">
+                class="dark:bg-transparent p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-900 transition-colors hidden xs:inline-block">
                 <i data-lucide="info" class="w-4 h-4 text-zinc-400"></i>
             </button>
             <button id="alertSettingsBtn" title="settings :3"
@@ -105,7 +109,7 @@
                 <i data-lucide="settings" class="w-4 h-4 text-zinc-400"></i>
             </button>
             <button title="if the background is already dark, do not press for your own better" id="themeToggle"
-                class="dark:bg-transparent p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-900 transition-colors">
+                class="dark:bg-transparent p-2 rounded hover:bg-zinc-200 dark:hover:bg-zinc-900 hidden xs:block transition-colors">
                 <i data-lucide="sun" class="w-4 h-4 dark:hidden text-zinc-500"></i>
                 <i data-lucide="moon" class="hidden dark:block w-4 h-4 text-zinc-400"></i>
             </button>
@@ -153,11 +157,10 @@
     </div>
 
     <section class="w-full flex-grow flex flex-col justify-center max-w-5xl mx-auto h-full px-4 py-2">
-
-        <div class="grid grid-cols-2 gap-8 items-end w-full mb-6">
+        <div class="grid xs:grid-cols-2 gap-8 items-end w-full mt-6 xs:mt-0 mb-6">
             <div title="Current position in global leaderboard" data-refresh="lb"
-                class=" cursor-pointer p-1 transition-all">
-                <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium flex items-center gap-1">
+                class="hidden xs:grid cursor-pointer p-1 transition-all">
+                <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium items-center gap-1">
                     Global Rank
                 </div>
                 <div class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-200 mt-1" id="global_rank">
@@ -165,7 +168,7 @@
             </div>
 
             <div data-refresh="heartbeat" title="how much time ago you made your last edit"
-                class="p-1 cursor-pointer transition-all text-right">
+                class="p-1 cursor-pointer transition-all text-center xs:text-right">
                 <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">Since
                     Last Heartbeat</div>
                 <div id="timeAgoDisplay"
@@ -176,7 +179,7 @@
 
         <div data-refresh="actual"
             title="official amount of time that was tracked today, you'll also see it on ur hackatime dashboard"
-            class="w-full py-6 dark:bg-zinc-950/20 border border-zinc-200/50 dark:border-zinc-900/50 rounded-2xl cursor-pointer transition-all text-center backdrop-blur-sm shadow-sm my-auto">
+            class="w-full py-6 dark:bg-zinc-950/20 xs:border border-zinc-200/50 dark:border-zinc-900/50 rounded-2xl cursor-pointer transition-all text-center backdrop-blur-sm shadow-sm my-auto">
             <div class="text-sm text-zinc-400 dark:text-zinc-500 font-semibold mb-1">
                 Time Tracked Today
             </div>
@@ -186,8 +189,9 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-8 items-end w-full mt-6">
-            <div data-refresh="potential" id="potential" title="" class="p-1 cursor-pointer transition-all">
+        <div class="grid xs:grid-cols-2 md:grid-cols-3 items-end w-full mt-6">
+            <div data-refresh="potential" id="potential" title=""
+                class="p-1 text-center xs:text-left cursor-pointer transition-all">
                 <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium" id="potentialH">Since Started
                 </div>
                 <div id="potentialTimeDisplay"
@@ -195,10 +199,10 @@
                     00:00:00</div>
             </div>
 
-            <div data-refresh="hourly" id="hourlyCard" class="text-center p-1 cursor-pointer transition-all">
+            <div data-refresh="hourly" id="hourlyCard"
+                class="text-center p-1 cursor-pointer transition-all hidden md:block">
                 <div id="barGraph" class="w-full gap-1 h-12 mb-2 grid grid-cols-24 items-end">
                 </div>
-
                 <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium"
                     title="hourly activity in the last 24 hours">Last 24 Hours</div>
                 <div id="hourlyTotalDisplay" title="hourly activity in the last 24 hours"
@@ -207,7 +211,7 @@
                 </div>
             </div>
 
-            <div class="p-1 text-right" title="time when your first heartbeat was recorded today">
+            <div class="p-1 hidden xs:block text-right" title="time when your first heartbeat was recorded today">
                 <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">Started
                     Coding At</div>
                 <div id="sessionStartDisplay"
@@ -219,7 +223,8 @@
 
     <footer class="w-full pt-4 mt-auto space-y-2 pb-2 flex-shrink-0 max-w-5xl mx-auto"
         title="today's progress based on your set daily goal">
-        <div class="flex justify-between items-center text-xs font-medium text-zinc-400 dark:text-zinc-500">
+        <div
+            class="flex justify-between items-center text-xs hidden xs:block font-medium text-zinc-400 dark:text-zinc-500">
             <span class="progress"></span>
             <span id="progressText"
                 class="bg-zinc-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded text-zinc-800 dark:text-zinc-200">0.0%</span>

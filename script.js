@@ -532,5 +532,8 @@ function fmtDur(s) {
     if (h > 0) parts.push(`${h}h`);
     if (m > 0 || h > 0) parts.push(`${m}m`);
     parts.push(`${sec}s`);
-    return parts.join(' ');
+    let r = parts.join(' ');
+    if (!window.matchMedia('(min-width: 768px)').matches) r = r.replace(/ \d+s/, "");
+    if (!window.matchMedia('(min-width: 282px)').matches) r = r.replace(/ \d+m/, "");
+    return r;
 }
