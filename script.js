@@ -7,6 +7,8 @@ let alertEnabled = false;
 let timeModeLost = false;
 let audio = new Audio();
 
+const hackatime = "https://hackatime.hackclub.com";
+
 let alarming_situation = false;
 
 const getCoding = ["Get coding vro -_-", "BROOOO GET CODING", "Stop procrastinating", "Be like Sabio Tang, your code shall exist more than you do", "Nah bro dont give up already :<", "That's what she said", "RRRRRRRAAAAAAHHHHHHHH GET U SELF CODING OR ELSE :rick-astley-gun:", "Uhhhh get coding :P", "If u code for 30 more minutes I'll ask you to code for another 30"];
@@ -47,7 +49,7 @@ async function handleOauth() {
     const accessToken = params.get('access_token');
     let key = "";
     if (accessToken) {
-        const apiKeyRes = await fetch('https://hackatime.hackclub.com/api/v1/authenticated/api_keys', {
+        const apiKeyRes = await fetch(hackatime + '/api/v1/authenticated/api_keys', {
             headers: { 'Authorization': `Bearer ${accessToken}` }
         });
 
@@ -90,7 +92,7 @@ function initTheme() {
 function initAlert() {
     alertEnabled = localStorage.getItem('alert_on') === 'true';
     d.reminderMinutes.value = localStorage.getItem('alert_mins') || '3';
-    d.audioUrlInput.value = localStorage.getItem('alert_audio') || 'https://myinstants.com/media/sounds/epic.mp3';
+    d.audioUrlInput.value = localStorage.getItem('alert_audio') || 'https://www.myinstants.com/media/sounds/epic.mp3';
     timeModeLost = localStorage.getItem('time_mode') === 'true';
 
     preloadAudio(d.audioUrlInput.value);
@@ -166,11 +168,141 @@ function updateToggleUI() {
 }
 
 function syncHackers() {
-    fetch("https://hackatime.hackclub.com/api/v1/currently_hacking").then(r => r.json()).then(data => { d.hacking.textContent = data.count });
+    fetch(hackatime + "/api/v1/currently_hacking").then(r => r.json()).then(data => { d.hacking.textContent = data.count });
 }
 
 function syncLive() {
     fetch("https://live.alimad.co/ping?app=beat.alimad.co").then(r => r.text()).then(n => d.live.textContent = n);
+}
+
+async function fillHourly() {
+    const now = new Date();
+    const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const storeK = 'h_hourly_cache';
+    let final;
+    let cache = {};
+
+    try {
+        const stored = localStorage.getItem(storeK);
+        if (stored) cache = JSON.parse(stored);
+    } catch (e) {
+        cache = {};
+    }
+
+    const maxStorageCutoff = now.getTime() - 48 * 60 * 60 * 1000;
+    Object.keys(cache).forEach(ts => {
+        if (new Date(ts).getTime() < maxStorageCutoff) {
+            delete cache[ts];
+        }
+    });
+
+    const bucke = {};
+    const currentHourIso = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours()).toISOString();
+
+    const hourSlots = [];
+    for (let i = 23; i >= 0; i--) {
+        const h = new Date(now.getTime() - i * 60 * 60 * 1000);
+        h.setMinutes(0, 0, 0, 0);
+        hourSlots.push(h.toISOString());
+    }
+
+    const oldestHourIso = hourSlots[0];
+
+    hourSlots.forEach(iso => {
+        if (iso !== currentHourIso && iso !== oldestHourIso && cache[iso] !== undefined) {
+            bucke[iso] = cache[iso];
+        } else {
+            bucke[iso] = 0;
+        }
+    });
+
+    let fetchStart = start;
+    const missingKeys = hourSlots.filter(k => k === oldestHourIso || k === currentHourIso || cache[k] === undefined);
+
+    if (missingKeys.length > 0) {
+        missingKeys.sort();
+        const earliestMissing = new Date(missingKeys[0]);
+        // Use earliest missing hour, but never start later than 24h ago
+        fetchStart = earliestMissing < start ? earliestMissing : start;
+    }
+
+    const r = await fetch(`${hackatime}/api/v1/my/heartbeats?start_time=${fetchStart.toISOString()}&end_time=${now.toISOString()}`, {
+        headers: { Authorization: `Bearer ${cfg.oauthToken}` }
+    });
+
+    if (r.ok) {
+        const d = await r.json();
+        const beats = d.heartbeats || [];
+        const timeout = 120;
+
+        const startSec = start.getTime() / 1000;
+
+        for (let i = 1; i < beats.length; i++) {
+            const prev = beats[i - 1].time;
+            const curr = beats[i].time;
+            if (curr < startSec) continue;
+            const effectivePrev = Math.max(prev, startSec);
+            const delta = Math.min(curr - effectivePrev, timeout);
+
+            if (delta > 0) {
+                const dt = new Date(curr * 1000);
+                dt.setMinutes(0, 0, 0, 0);
+                const key = dt.toISOString();
+
+                if (key in bucke) {
+                    bucke[key] += delta;
+                }
+            }
+        }
+
+        hourSlots.forEach(iso => {
+            if (iso !== currentHourIso && iso !== oldestHourIso) {
+                cache[iso] = bucke[iso];
+            }
+        });
+        localStorage.setItem(storeK, JSON.stringify(cache));
+
+        final = Object.entries(bucke).map(([timestamp, seconds]) => {
+            const dt = new Date(timestamp);
+            const hour = dt.toLocaleTimeString([], {
+                hour: '2-digit', minute: '2-digit', hour12: false
+            });
+
+            return { timestamp, hour, seconds, formatted: fmtDur(seconds) };
+        });
+    }
+
+    const g = el('barGraph');
+    const td = el('hourlyTotalDisplay');
+    if (!final || final.length === 0 || !g) return;
+
+    g.innerHTML = '';
+    g.style.gridTemplateColumns = 'repeat(24, minmax(0, 1fr))';
+    const maxSec = Math.max(...final.map(item => item.seconds), 1);
+    const totSec = final.reduce((acc, curr) => acc + curr.seconds, 0);
+    if (td) td.textContent = fmtDur(totSec);
+
+    final.forEach((item) => {
+        const dt = new Date(item.timestamp);
+        const hour12 = dt.toLocaleTimeString([], { hour: 'numeric', hour12: true }).replace(/\s+/g, '');
+        const titleText = `${item.formatted} @ ${hour12}`;
+
+        const track = document.createElement('div');
+        track.className = 'w-full h-full bg-zinc-200 dark:bg-zinc-800/50 flex items-end cursor-pointer group transition-colors hover:bg-zinc-300 dark:hover:bg-zinc-800';
+        track.title = titleText;
+
+        const bar = document.createElement('div');
+        const ht = item.seconds > 0 ? Math.max(4, Math.round((item.seconds / maxSec) * 100)) : 0;
+        const bC = item.seconds > 0
+            ? 'bg-green-500 dark:bg-green-400 group-hover:bg-green-400 dark:group-hover:bg-green-300'
+            : 'bg-transparent';
+
+        bar.className = `w-full transition-all duration-300 ${bC}`;
+        bar.style.height = `${ht}%`;
+
+        track.appendChild(bar);
+        g.appendChild(track);
+    });
 }
 
 function loadCfg() {
@@ -188,6 +320,7 @@ function loadCfg() {
             setTimeout(() => sync(['lb']), 2 * 60 * 1000);
             setTimeout(syncHackers, 30 * 1000);
             setTimeout(syncLive, 15 * 1000);
+            fillHourly();
         }
     } else {
         d.setupModal.classList.remove('hidden');
@@ -202,7 +335,7 @@ d.saveconfigBtn.addEventListener('click', () => {
     const CLIENT_ID = 'XeZSxRcmM3D5SR_437caoQUvmPFc2xkg18ce6Wk9Y7E';
     const REDIRECT_URI = encodeURIComponent('https://api.alimad.co/auth/hackatime/callback');
     localStorage.setItem('h_cfg', JSON.stringify({ username: '', authToken: '', targetHours: 2.0 }));
-    window.location.href = `https://hackatime.hackclub.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile+read`;
+    window.location.href = `${hackatime}/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile+read`;
 });
 
 d.logoutBtn.addEventListener('click', () => {
@@ -228,7 +361,7 @@ async function sync(types) {
 
     const routes = {
         actual: {
-            url: `https://hackatime.hackclub.com/api/hackatime/v1/users/current/statusbar/today`,
+            url: `${hackatime}/api/hackatime/v1/users/current/statusbar/today`,
             el: d.actualTimeDisplay,
             headers: operationalHeaders,
             fn: (json) => {
@@ -246,7 +379,7 @@ async function sync(types) {
             }
         },
         streak: {
-            url: `https://hackatime.hackclub.com/api/v1/authenticated/streak`,
+            url: `${hackatime}/api/v1/authenticated/streak`,
             el: d.streakDisplay,
             headers: standardHeaders,
             fn: (json) => {
@@ -256,7 +389,7 @@ async function sync(types) {
             }
         },
         heartbeat: {
-            url: 'https://hackatime.hackclub.com/api/v1/authenticated/heartbeats/latest',
+            url: hackatime + '/api/v1/authenticated/heartbeats/latest',
             el: d.timeAgoDisplay,
             headers: standardHeaders,
             fn: (json) => {
@@ -273,7 +406,7 @@ async function sync(types) {
             }
         },
         potential: {
-            url: 'https://hackatime.hackclub.com/api/v1/my/heartbeats',
+            url: hackatime + '/api/v1/my/heartbeats',
             el: d.potentialTimeDisplay,
             headers: operationalHeaders,
             fn: (json) => {
@@ -395,15 +528,18 @@ function calc() {
 }
 
 function fmtAgo(s) {
-    if (s < 5) return '00:00';
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    if (s < 5) return '0s';
+    return fmtDur(s);
 }
 
 function fmtDur(s) {
+    if (!s || s <= 0) return '0s';
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     const sec = Math.floor(s % 60);
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    const parts = [];
+    if (h > 0) parts.push(`${h}h`);
+    if (m > 0 || h > 0) parts.push(`${m}m`);
+    parts.push(`${sec}s`);
+    return parts.join(' ');
 }

@@ -186,7 +186,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-8 items-start w-full mt-6">
+        <div class="grid grid-cols-3 gap-8 items-end w-full mt-6">
             <div data-refresh="potential" id="potential" title="" class="p-1 cursor-pointer transition-all">
                 <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium" id="potentialH">Since Started
                 </div>
@@ -194,9 +194,22 @@
                     class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-200 mt-1 opacity-30 transition-opacity duration-150">
                     00:00:00</div>
             </div>
+
+            <div data-refresh="hourly" id="hourlyCard" class="text-center p-1 cursor-pointer transition-all">
+                <div id="barGraph" class="w-full gap-1 h-12 mb-2 grid grid-cols-24 items-end">
+                </div>
+
+                <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium"
+                    title="hourly activity in the last 24 hours">Last 24 Hours</div>
+                <div id="hourlyTotalDisplay" title="hourly activity in the last 24 hours"
+                    class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-200 mt-1 transition-opacity duration-150 opacity-100">
+                    0s
+                </div>
+            </div>
+
             <div class="p-1 text-right" title="time when your first heartbeat was recorded today">
                 <div class="text-xs text-zinc-400 dark:text-zinc-500 font-medium">Started
-                    coding at</div>
+                    Coding At</div>
                 <div id="sessionStartDisplay"
                     class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-200 mt-1">--:--:--
                 </div>
@@ -262,10 +275,13 @@
                     and set up a reminder to work after X minutes of inactivity!</p>
                 <h2 class="text-base font-bold text-white">How it works</h2>
                 <p>To question how this works, we need to question how Hackatime works.</p>
-                <p>Hackatime tracks time using heartbeats. Whenever you write some code, it uploads a heartbeat. If the
-                    time interval between two heartbeats is less than 5 minutes, Hackatime counts it as time spent
-                    coding. This app alerts the user if they spend more than 3 minutes idle, so that they can track more
-                    time.</p>
+                <p>Hackatime measures time using heartbeats, sent at some constant rate while you type code, sent
+                    instantly if the timeout has passed already. If the time interval between two consecutive heartbeats
+                    is less than 2 minutes, Hackatime counts it all as a coding session time and keeps extending the
+                    current session. If the gap is greater than 2 minutes, Hackatime splits the activity into a new
+                    session, however, instead of discarding the gap completely, it adds 2 more minutes to the prebious
+                    session. This app alerts the user if they spend more than X
+                    minutes idle, so that they can track more time.</p>
                 <p class="text-xs text-zinc-500">(As far as I know, this is not against Hackatime policy, but if I'm
                     wrong, please correct me)</p>
                 <div class="pt-2 border-t border-zinc-800 flex justify-between items-center">
