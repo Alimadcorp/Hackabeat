@@ -1,8 +1,9 @@
 let cfg = { username: '', authToken: '', targetHours: 2.0 };
 let startTimestamp = null, actualTotalSeconds = 0, lastHeartbeatTime = null;
 
-const locks = { actual: false, streak: false, heartbeat: false, potential: false, lb: false };
+const locks = { actual: false, streak: false, heartbeat: false, potential: false, lb: false, hourly: false };
 let lastHr = new Date().getHours();
+let lastDay = new Date().getDate();
 let alertEnabled = false;
 let timeModeLost = false;
 let audio = new Audio();
@@ -35,9 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateClock, 50);
     setInterval(calc, 50);
     setInterval(() => sync(['heartbeat', 'actual']), 60000);
+    setInterval(fillHourly, 5 * 60 * 1000);
 
     document.querySelectorAll('[data-refresh]').forEach(card => {
-        card.addEventListener('click', () => sync([card.dataset.refresh]));
+        card.addEventListener('click', () => {
+            const refreshType = card.dataset.refresh;
+            if (refreshType === 'hourly') {
+                fillHourly();
+            } else {
+                sync([refreshType]);
+            }
+        });
     });
 });
 
@@ -55,7 +64,7 @@ async function handleOauth() {
 
         if (!apiKeyRes.ok) throw new Error('Failed to retrieve operational api key');
         key = (await apiKeyRes.json()).token;
-    } else { return }
+    } else { return; }
     const usnm = params.get('username');
     const uid = params.get('uid');
 
@@ -176,6 +185,9 @@ function syncLive() {
 }
 
 async function fillHourly() {
+    if (locks.hourly) return;
+    locks.hourly = true;
+
     const now = new Date();
     const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const storeK = 'h_hourly_cache';
@@ -222,54 +234,59 @@ async function fillHourly() {
     if (missingKeys.length > 0) {
         missingKeys.sort();
         const earliestMissing = new Date(missingKeys[0]);
-        // Use earliest missing hour, but never start later than 24h ago
         fetchStart = earliestMissing < start ? earliestMissing : start;
     }
 
-    const r = await fetch(`${hackatime}/api/v1/my/heartbeats?start_time=${fetchStart.toISOString()}&end_time=${now.toISOString()}`, {
-        headers: { Authorization: `Bearer ${cfg.oauthToken}` }
-    });
+    try {
+        const r = await fetch(`${hackatime}/api/v1/my/heartbeats?start_time=${fetchStart.toISOString()}&end_time=${now.toISOString()}`, {
+            headers: { Authorization: `Bearer ${cfg.oauthToken || cfg.authToken}` }
+        });
 
-    if (r.ok) {
-        const d = await r.json();
-        const beats = d.heartbeats || [];
-        const timeout = 120;
+        if (r.ok) {
+            const dData = await r.json();
+            const beats = dData.heartbeats || [];
+            const timeout = 120;
 
-        const startSec = start.getTime() / 1000;
+            const startSec = start.getTime() / 1000;
 
-        for (let i = 1; i < beats.length; i++) {
-            const prev = beats[i - 1].time;
-            const curr = beats[i].time;
-            if (curr < startSec) continue;
-            const effectivePrev = Math.max(prev, startSec);
-            const delta = Math.min(curr - effectivePrev, timeout);
+            for (let i = 1; i < beats.length; i++) {
+                const prev = beats[i - 1].time;
+                const curr = beats[i].time;
+                if (curr < startSec) continue;
+                const effectivePrev = Math.max(prev, startSec);
+                const delta = Math.min(curr - effectivePrev, timeout);
 
-            if (delta > 0) {
-                const dt = new Date(curr * 1000);
-                dt.setMinutes(0, 0, 0, 0);
-                const key = dt.toISOString();
+                if (delta > 0) {
+                    const dt = new Date(curr * 1000);
+                    dt.setMinutes(0, 0, 0, 0);
+                    const key = dt.toISOString();
 
-                if (key in bucke) {
-                    bucke[key] += delta;
+                    if (key in bucke) {
+                        bucke[key] += delta;
+                    }
                 }
             }
-        }
 
-        hourSlots.forEach(iso => {
-            if (iso !== currentHourIso && iso !== oldestHourIso) {
-                cache[iso] = bucke[iso];
-            }
-        });
-        localStorage.setItem(storeK, JSON.stringify(cache));
-
-        final = Object.entries(bucke).map(([timestamp, seconds]) => {
-            const dt = new Date(timestamp);
-            const hour = dt.toLocaleTimeString([], {
-                hour: '2-digit', minute: '2-digit', hour12: false
+            hourSlots.forEach(iso => {
+                if (iso !== currentHourIso && iso !== oldestHourIso) {
+                    cache[iso] = bucke[iso];
+                }
             });
+            localStorage.setItem(storeK, JSON.stringify(cache));
 
-            return { timestamp, hour, seconds, formatted: fmtDur(seconds) };
-        });
+            final = Object.entries(bucke).map(([timestamp, seconds]) => {
+                const dt = new Date(timestamp);
+                const hour = dt.toLocaleTimeString([], {
+                    hour: '2-digit', minute: '2-digit', hour12: false
+                });
+
+                return { timestamp, hour, seconds, formatted: fmtDur(seconds) };
+            });
+        }
+    } catch (e) {
+        console.error("Error fetching hourly heartbeats:", e);
+    } finally {
+        locks.hourly = false;
     }
 
     const g = el('barGraph');
@@ -347,17 +364,24 @@ function updateClock() {
     const now = new Date();
     d.localClock.textContent = now.toLocaleTimeString([], { hour12: false });
     const curHr = now.getHours();
-    if (curHr === 0 && lastHr !== 0) {
+    const curDay = now.getDate();
+    if (curDay !== lastDay) {
         startTimestamp = null;
+        d.sessionStartDisplay.textContent = "--:--:--";
+        fillHourly();
         sync(['actual', 'streak', 'heartbeat', 'potential', 'lb']);
     }
+
     lastHr = curHr;
+    lastDay = curDay;
 }
 
 async function sync(types) {
     if (!cfg.authToken || !cfg.username) return;
     const standardHeaders = { 'Authorization': `Bearer ${cfg.authToken}` };
     const operationalHeaders = cfg.oauthToken ? { 'Authorization': `Bearer ${cfg.oauthToken}` } : standardHeaders;
+    const localMidnight = new Date();
+    localMidnight.setHours(0, 0, 0, 0);
 
     const routes = {
         actual: {
@@ -406,12 +430,15 @@ async function sync(types) {
             }
         },
         potential: {
-            url: hackatime + '/api/v1/my/heartbeats',
+            url: `${hackatime}/api/v1/my/heartbeats?start_time=${localMidnight.toISOString()}`,
             el: d.potentialTimeDisplay,
             headers: operationalHeaders,
             fn: (json) => {
-                if (json.heartbeats?.length > 0) {
-                    startTimestamp = json.heartbeats[0].time;
+                if (startTimestamp === null && json.heartbeats?.length > 0) {
+                    const localMidnightSec = localMidnight.getTime() / 1000;
+                    const firstToday = json.heartbeats.find(hb => hb.time >= localMidnightSec) || json.heartbeats[0];
+
+                    startTimestamp = firstToday.time;
                     const dateObj = new Date(startTimestamp * 1000);
                     d.sessionStartDisplay.textContent = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
                 }
@@ -442,10 +469,10 @@ async function sync(types) {
                     const r = parseInt(rank);
                     element.className = isGlobal ? "text-2xl sm:text-3xl font-bold mt-1" : "text-zinc-900 dark:text-zinc-100";
                     element.style.cssText = "";
-                    if (r === 1) { element.style.cssText = "color: #facc15;" }
-                    else if (r <= 10) { element.style.cssText = "color: #22d3ee;" }
-                    else if (r <= 50) { element.style.cssText = "color: #34d399;" }
-                    else { element.classList.add(isGlobal ? 'text-zinc-800' : 'text-zinc-900', 'dark:text-zinc-200') }
+                    if (r === 1) { element.style.cssText = "color: #facc15;"; }
+                    else if (r <= 10) { element.style.cssText = "color: #22d3ee;"; }
+                    else if (r <= 50) { element.style.cssText = "color: #34d399;"; }
+                    else { element.classList.add(isGlobal ? 'text-zinc-800' : 'text-zinc-900', 'dark:text-zinc-200'); }
                 }
                 styleRank(d.global_rank, dats.global_rank, true);
                 styleRank(d.local_rank, dats.local_rank, false);
@@ -456,6 +483,9 @@ async function sync(types) {
     };
 
     types.forEach(async (t) => {
+        // Skip re-fetching potential if startTimestamp is already established static
+        if (t === 'potential' && startTimestamp !== null) return;
+
         const r = routes[t];
         if (!r || locks[t]) return;
 
@@ -464,7 +494,8 @@ async function sync(types) {
         r.el.classList.remove('opacity-100');
 
         try {
-            const res = await fetch(r.url, { headers: r.headers });
+            const fetchUrl = typeof r.url === 'function' ? r.url() : r.url;
+            const res = await fetch(fetchUrl, { headers: r.headers });
             if (res.ok) r.fn(await res.json());
         } catch (e) {
             console.error(e);
