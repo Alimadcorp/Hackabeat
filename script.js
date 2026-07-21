@@ -192,53 +192,19 @@ async function fillHourly() {
     const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const storeK = 'h_hourly_cache';
     let final;
-    let cache = {};
-
-    try {
-        const stored = localStorage.getItem(storeK);
-        if (stored) cache = JSON.parse(stored);
-    } catch (e) {
-        cache = {};
-    }
-
-    const maxStorageCutoff = now.getTime() - 48 * 60 * 60 * 1000;
-    Object.keys(cache).forEach(ts => {
-        if (new Date(ts).getTime() < maxStorageCutoff) {
-            delete cache[ts];
-        }
-    });
-
-    const bucke = {};
-    const currentHourIso = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours()).toISOString();
 
     const hourSlots = [];
+    const bucke = {};
     for (let i = 23; i >= 0; i--) {
         const h = new Date(now.getTime() - i * 60 * 60 * 1000);
         h.setMinutes(0, 0, 0, 0);
-        hourSlots.push(h.toISOString());
-    }
-
-    const oldestHourIso = hourSlots[0];
-
-    hourSlots.forEach(iso => {
-        if (iso !== currentHourIso && iso !== oldestHourIso && cache[iso] !== undefined) {
-            bucke[iso] = cache[iso];
-        } else {
-            bucke[iso] = 0;
-        }
-    });
-
-    let fetchStart = start;
-    const missingKeys = hourSlots.filter(k => k === oldestHourIso || k === currentHourIso || cache[k] === undefined);
-
-    if (missingKeys.length > 0) {
-        missingKeys.sort();
-        const earliestMissing = new Date(missingKeys[0]);
-        fetchStart = earliestMissing < start ? earliestMissing : start;
+        const iso = h.toISOString();
+        hourSlots.push(iso);
+        bucke[iso] = 0;
     }
 
     try {
-        const r = await fetch(`${hackatime}/api/v1/my/heartbeats?start_time=${fetchStart.toISOString()}&end_time=${now.toISOString()}`, {
+        const r = await fetch(`${hackatime}/api/v1/my/heartbeats?start_time=${start.toISOString()}&end_time=${now.toISOString()}`, {
             headers: { Authorization: `Bearer ${cfg.oauthToken || cfg.authToken}` }
         });
 
@@ -246,17 +212,13 @@ async function fillHourly() {
             const dData = await r.json();
             const beats = dData.heartbeats || [];
             const timeout = 120;
-
             const startSec = start.getTime() / 1000;
-
-            missingKeys.forEach(key => {
-                bucke[key] = 0;
-            });
 
             for (let i = 1; i < beats.length; i++) {
                 const prev = beats[i - 1].time;
                 const curr = beats[i].time;
                 if (curr < startSec) continue;
+
                 const effectivePrev = Math.max(prev, startSec);
                 const delta = Math.min(curr - effectivePrev, timeout);
 
@@ -271,13 +233,7 @@ async function fillHourly() {
                 }
             }
 
-            // Save completed full static hours to cache
-            hourSlots.forEach(iso => {
-                if (iso !== currentHourIso && iso !== oldestHourIso) {
-                    cache[iso] = bucke[iso];
-                }
-            });
-            localStorage.setItem(storeK, JSON.stringify(cache));
+            localStorage.setItem(storeK, JSON.stringify(bucke));
 
             final = Object.entries(bucke).map(([timestamp, seconds]) => {
                 const dt = new Date(timestamp);
