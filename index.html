@@ -117,7 +117,8 @@
     </header>
 
 
-    <main id="setupModal" class="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
+    <main id="setupModal"
+        class="fixed inset-0 bg-white/95 dark:bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
         <div
             class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-2xl shadow-2xl transition-all space-y-4">
             <div class="border-zinc-200 dark:border-zinc-800">
@@ -237,7 +238,7 @@
     </footer>
 
     <div id="alertSettingsModal"
-        class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        class="hidden fixed inset-0 bg-theme/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
         <div
             class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-8 rounded-lg space-y-4">
             <h2 class="text-lg text-zinc-400" title="Yes, settings">Settings</h2>
@@ -268,17 +269,17 @@
     </div>
 
     <div id="infoModal"
-        class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        class="hidden fixed inset-0 bg-theme/95 backdrop-blur-md flex items-center justify-center p-4 z-50">
         <div
             class="bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 max-w-md w-full p-6 rounded-lg space-y-2 overflow-y-auto max-h-[90vh]">
-            <h2 class="text-lg text-zinc-400" title="info on how it works and why">README.md</h2>
-            <div class="flex flex-col gap-2 p-3 border border-zinc-200 dark:border-zinc-800 rounded text-sm text-zinc-300 space-y-2"
+            <h2 class="text-lg text-zinc-500" title="info on how it works and why">README.md</h2>
+            <div class="flex flex-col gap-2 p-3 border border-zinc-200 dark:border-zinc-800 rounded text-sm text-theme space-y-2"
                 title="mmmm u gotta put the mouse sunwhere else if this is annoying">
-                <h2 class="text-base font-bold text-white">Hackabeat</h2>
+                <h2 class="text-base font-bold">Hackabeat</h2>
                 <p>Hackabeat, an app for hackclubbers; to show exactly when you started coding, how much time you would
                     have made if you had been coding constantly since you started, how much you've actually recorded,
                     and set up a reminder to work after X minutes of inactivity!</p>
-                <h2 class="text-base font-bold text-white">How it works</h2>
+                <h2 class="text-base font-bold">How it works</h2>
                 <p>To question how this works, we need to question how Hackatime works.</p>
                 <p>Hackatime measures time using heartbeats, sent at some constant rate while you type code, sent
                     instantly if the timeout has passed already. If the time interval between two consecutive heartbeats
